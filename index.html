@@ -148,6 +148,10 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 @keyframes adj{0%{background:var(--accent-soft);border-color:var(--accent)}100%{}}
 .set input.adj{animation:adj 1.6s ease-out}
 .ss{margin:0;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+.vid{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.vbtn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.linkbtn{border:0;background:none;padding:4px 0;color:var(--accent);font:600 13px var(--body);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.videdit{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:10px;padding:10px}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -347,6 +351,27 @@ function figure(id,obj,canPhoto){
   </div>`;
 }
 let ASSETS=null;
+// ----- Technik-Videos (YouTube) -----
+const VQ={squat:"Kniebeuge Langhantel richtige Ausführung",goblet:"Goblet Box Squat Ausführung",legpress:"Beinpresse richtige Ausführung",
+  bench:"Bankdrücken richtige Ausführung Technik",chestpress:"Brustpresse Maschine richtige Ausführung",incline:"Schrägbankdrücken Kurzhantel richtige Ausführung",cablepress:"Brustpresse Kabelzug stehend Ausführung",
+  latpull:"Latzug richtige Ausführung",cablepull:"Latziehen kniend Kabelzug Ausführung",straightpull:"Straight Arm Pulldown Kabel Ausführung",
+  row:"Rudern am Kabel sitzend richtige Ausführung",rowmachine:"Rudermaschine sitzend Ausführung",dbrow:"Kurzhantel Rudern einarmig richtige Ausführung",
+  rdl:"Rumänisches Kreuzheben richtige Ausführung",legcurl:"Beinbeuger sitzend Maschine Ausführung",backext:"Rückenstrecker Maschine richtige Ausführung",kbswing:"Kettlebell Swing richtige Ausführung Anfänger",
+  ohp:"Schulterdrücken Kurzhantel sitzend richtige Ausführung",shoulderpress:"Schulterpresse Maschine Ausführung",lunge:"Ausfallschritte Kurzhantel richtige Ausführung",
+  legext:"Beinstrecker Maschine richtige Ausführung",stepup:"Step Ups Kurzhantel Ausführung",lateral:"Seitheben Kurzhantel richtige Ausführung Fehler",cablelateral:"Seitheben Kabel einarmig Ausführung",
+  plank:"Unterarmstütz Plank richtige Ausführung",crunch:"Kabel Crunch kniend richtige Ausführung",abmachine:"Bauchmaschine Crunch Maschine Ausführung",wolffrot:"Rotary Torso Maschine Ausführung",pallof:"Pallof Press Ausführung",
+  triceps:"Trizepsdrücken Kabel Seil richtige Ausführung",ohtriceps:"Trizeps Überkopf Kabel Ausführung",tricepsmachine:"Dip Maschine Trizeps Ausführung",
+  dbcurl:"Bizepscurls Kurzhantel richtige Ausführung",cablecurl:"Bizepscurls Kabel Ausführung",bicepsmachine:"Bizepsmaschine Ausführung",
+  facepull:"Face Pulls richtige Ausführung",reversefly:"Reverse Butterfly Maschine Ausführung",dbreardelt:"vorgebeugtes Seitheben hintere Schulter Ausführung",
+  cablefly:"Cable Fly Kabel Butterfly richtige Ausführung",flymachine:"Butterfly Maschine richtige Ausführung",dbfly:"Kurzhantel Fliegende richtige Ausführung",
+  "c-treadmill":"Laufband gehen Steigung Anfänger Tipps","c-cross":"Crosstrainer richtige Haltung Technik","c-bike":"Ergometer Sattelhöhe einstellen richtig","c-rower":"Rudergerät Technik Anfänger","c-stepper":"Stepper richtige Haltung Ausführung"};
+function videoUrl(id,name){const own=(settings().videos||{})[id];return own||"https://www.youtube.com/results?search_query="+encodeURIComponent(VQ[id]||(String(name).replace(/ \(.*\)/,"")+" richtige Ausführung"))}
+function videoRow(id,name){
+  const own=(settings().videos||{})[id];
+  return`<div class="vid"><a class="btn ghost small vbtn" href="${esc(videoUrl(id,name))}" target="_blank" rel="noopener">▶ ${own?"Mein Video":"Technik-Video"}</a><button class="linkbtn" data-act="vid-open" data-v="${id}">${own?"Video ändern":"Eigenes Video speichern"}</button></div>
+  ${S.vidOpen===id?`<div class="videdit"><label class="f" for="vid-${id}">YouTube-Link einfügen (in YouTube: Teilen → Link kopieren)<input id="vid-${id}" type="url" inputmode="url" placeholder="https://youtu.be/…" value="${esc(own||"")}"></label>
+    <div class="row"><button class="btn small" data-act="vid-save" data-v="${id}">Speichern</button>${own?`<button class="btn ghost small" data-act="vid-clear" data-v="${id}">Zurück zur Suche</button>`:""}</div></div>`:""}`;
+}
 
 const CHECKS_BASE=[["steps","Schrittziel erreicht"],["water","2,5 l Wasser"],["sleep","7–9 h Schlaf"],["train","Training oder 30 min Bewegung"]];
 const checks=()=>settings().creatine?CHECKS_BASE.concat([["creatine","Kreatin 5 g"]]):CHECKS_BASE;
@@ -604,6 +629,7 @@ function viewCardio(){
     <h2>Gerät</h2>
     <div class="chips">${Object.keys(CARDIO).map(k=>`<button class="chip" data-act="cdev" data-v="${k}" aria-pressed="${k===dev}">${CARDIO[k].n}</button>`).join("")}</div>
     ${figure("c-"+dev,c,true)}
+    ${videoRow("c-"+dev,c.n)}
     <p class="hint">${c.tip}</p>
     ${hrZone()}
     <p class="note">Gelenkschonend: gehen statt joggen, keine Sprünge. Jedes Ausdauergerät hat ein Schild mit dem maximalen Nutzergewicht – kurz prüfen oder das Studio-Team fragen.</p>
@@ -641,6 +667,7 @@ function viewTrain(){
       <div class="row"><span class="tag">${AREA[ex.area]}</span><span class="sub grow">${PAT[ex.pat]}</span><button class="btn ghost small" data-act="swap-open" data-v="${ex.key}" aria-expanded="${S.swapOpen===ex.key}">Tauschen</button></div>
       ${S.swapOpen===ex.key?`<div class="swapbox"><span class="sub">Gleiche Muskeln, anderes Gerät:</span><div class="chips">${altsF.map(id=>`<button class="chip" data-act="swap" data-v="${ex.key}|${id}">${esc(LIB[id].n)} <small>${AREA[LIB[id].area]}</small></button>`).join("")}${ex.swapped?`<button class="chip" data-act="swap" data-v="${ex.key}|${def}">Zurück zu: ${esc(LIB[def].n)}</button>`:""}</div></div>`:""}
       ${figure(ex.id,ex,true)}
+      ${videoRow(ex.id,ex.n)}
       <p class="hint">${last}${s.up?`<b>↑ ${s.why}</b>`:s.why}</p>
       ${ex.ssNext||ex.ssPrev?`<p class="ss">Supersatz ${ex.ssNext?"· danach direkt die nächste Übung, dann Pause":"· mit der Übung davor im Wechsel"}</p>`:""}
       <p class="hint">Pause ${ex.ssNext?"keine, direkt weiter":restLabel(restFor(ex))} · ${ex.time?"sauber halten, Bauch fest":learning()?"2–3 Wdh Reserve lassen, Technik lernen":"bis 1–2 Wdh vor dem Muskelversagen"}</p>
@@ -926,6 +953,7 @@ function viewKnow(){
       ${li("Nah ans Muskelversagen.","Stopp 1–2 Wiederholungen vorher. Nur in den ersten 6 Einheiten bewusst 2–3 Wiederholungen Reserve lassen, um die Technik zu lernen.","Robinson et al. 2024")}
       ${li("Ständig steigern – automatisch.","Nach jedem Satz gibst du an, wie viele Wiederholungen noch gegangen wären. Daraus schätzt die App deine aktuelle Kraft und stellt das Gewicht für den nächsten Satz und das nächste Training so ein, dass du in der Ziel-Spanne knapp vor dem Versagen landest. Das ist der wichtigste Wachstumsreiz.","Helms et al. 2016 (RIR-Skala)")}
       ${li("Lange Pausen bei Grundübungen.","2–3 Minuten bei Kniebeuge, Bankdrücken und Co., 90 Sekunden bei kleinen Übungen. Der Timer startet automatisch beim Abhaken.","Schoenfeld et al. 2016")}
+      ${li("Technik-Videos.","An jeder Übung öffnet „Technik-Video“ eine passende YouTube-Suche. Achte auf Kanäle von Trainern oder Physiotherapeuten. Hast du ein gutes Video gefunden, speicherst du es mit „Eigenes Video speichern“ fest an der Übung.","")}
       ${li("Voller Bewegungsumfang.","Gerade die gedehnte Position, z. B. tief in der Kniebeuge, regt das Wachstum stark an.","Pedrosa et al. 2022")}
     </ul>
   </section>
@@ -1013,6 +1041,11 @@ $("#view").addEventListener("click",e=>{
   else if(a==="check"){const d=dayObj(S.sel,true);d.checks=d.checks||{};d.checks[v]=!d.checks[v];touch(mk);b.setAttribute("aria-pressed",d.checks[v])}
   else if(a==="weight"){const w=num($("#w-in").value);if(w==null||w<30||w>300){flash("Gewicht in kg eingeben, z. B. 84,2");return}
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
+  else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
+  else if(a==="vid-save"){const u=(document.getElementById("vid-"+v).value||"").trim();
+    if(!/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(u)){flash("Bitte einen YouTube-Link einfügen");return}
+    const st=S.docs.settings||(S.docs.settings={});st.videos=st.videos||{};st.videos[v]=u;touch("settings");S.vidOpen=null;render();flash("Video gespeichert")}
+  else if(a==="vid-clear"){const st=S.docs.settings||(S.docs.settings={});if(st.videos)delete st.videos[v];touch("settings");S.vidOpen=null;render()}
   else if(a==="steps"){const n=num(String($("#steps-in").value).replace(/\./g,""));if(n==null||n<0||n>100000){flash("Schritte als Zahl eintragen");return}
     const d=dayObj(S.sel,true);d.steps=Math.round(n);d.checks=d.checks||{};d.checks.steps=n>=stepGoal();touch(mk);render();flash(n>=stepGoal()?"Schrittziel geschafft":"Schritte gespeichert")}
   else if(a==="stepgoal"){const st=S.docs.settings||(S.docs.settings={});st.stepGoal=+v;touch("settings");render()}
