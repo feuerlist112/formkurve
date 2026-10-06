@@ -81,6 +81,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--track);border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;border-radius:9px;padding:9px;font:600 14px var(--body);background:transparent;color:var(--muted);cursor:pointer}
 .seg button small{font-weight:500;opacity:.8}
+.seg button{white-space:nowrap;padding-inline:4px}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .ex{display:flex;flex-direction:column;gap:10px}
 .ex header{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
@@ -124,6 +125,10 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .vol{display:flex;flex-direction:column;gap:8px}
 .vrow{display:grid;grid-template-columns:96px 1fr 34px;gap:10px;align-items:center;font-size:13px}
 .vrow .num{text-align:right;font-weight:600}
+.vrow.wide{grid-template-columns:86px 1fr 34px 40px}
+.vrow .sd{color:var(--muted);font-weight:500}
+.vhead{font-size:11px;color:var(--muted);margin-top:-4px}
+.vhead .num{font-weight:600}
 .vbar{position:relative;height:10px;border-radius:99px;background:var(--track)}
 .vbar i{display:block;height:100%;border-radius:inherit;background:var(--warn)}
 .vbar.mid i{background:var(--accent)}
@@ -220,6 +225,18 @@ svg.ch.mini .endlab{font-size:12px}
 .tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .tbl th:first-child,.tbl td:first-child{text-align:left}
 @media (max-width:380px){.smult{grid-template-columns:repeat(2,1fr)}.sbar{grid-template-columns:80px 1fr 30px 42px}}
+.flist{display:flex;flex-direction:column;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.fitem{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;font:inherit;cursor:pointer;width:100%}
+.fitem:first-child{border-top:0}
+.fitem:active{background:var(--accent-soft)}
+.fitem .grow{display:flex;flex-direction:column;min-width:0;flex:1}
+.fitem b{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.fitem small{color:var(--muted);font-size:12px}
+.fitem .num{display:flex;flex-direction:column;align-items:flex-end;font-weight:600;font-size:13px}
+.fitem .plus{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.fcats{gap:6px}
+.savemy{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.savemy input{width:auto}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -909,8 +926,9 @@ function tickRest(){
 function stopRest(release){clearInterval(T.iv);T.iv=null;T.end=0;$("#rest").hidden=true;if(release&&T.wl){T.wl.release().catch(()=>{});T.wl=null}}
 // ----- Wochenvolumen pro Muskelgruppe -----
 const VGROUPS=[["Brust",["chest"]],["Rücken",["lats","upback"]],["Schultern",["fdelt","sdelt","rdelt"]],["Bizeps",["biceps"]],["Trizeps",["triceps"]],["Beine vorne",["quads"]],["Beine hinten",["hams"]],["Po",["glutes"]],["Bauch",["abs","obl"]]];
-function weekVolume(d){
-  const [mon,sun]=weekRange(d);const vol={};VGROUPS.forEach(g=>vol[g[0]]=0);
+function weekVolume(d){const [mon,sun]=weekRange(d);return rangeVolume(mon,sun)}
+function rangeVolume(mon,sun){
+  const vol={};VGROUPS.forEach(g=>vol[g[0]]=0);
   allSessions().filter(s=>s.ex&&s.date>=mon&&s.date<=sun).forEach(s=>Object.keys(s.ex).forEach(id=>{const e=LIB[id];if(!e||!e.mus)return;const n=s.ex[id].length;
     VGROUPS.forEach(([g,ms])=>{const f=ms.some(m=>e.mus.includes(m))?1:ms.some(m=>e.mus2.includes(m))?0.5:0;vol[g]+=f*n})}));
   return vol;
@@ -978,6 +996,30 @@ function overviewCard(){
       <h3 class="ovh">Bauchumfang</h3>${lineChart(wsl,{dots:true,connect:true,lineKey:"y",unit:"cm",aria:"Bauchumfang im "+head,empty:"Noch kein Bauchumfang in diesem Monat – einmal pro Woche messen.",xl:[0,14,nd-1]})}
       <h3 class="ovh">Kraft je Muskelgruppe <small>Index, Start = 100</small></h3>${strengthBars(cur,prev,"Vormonat")}`;
     table=[["Datum","Gewicht","Schnitt","Bauch"],...slots.map((x,i)=>[cm.slice(5)+"-"+pad(i+1),x.y,x.y2,x.w]).filter(r=>r[1]!=null||r[3]!=null).map(r=>[dlabel(cm+"-"+r[0].slice(3),{day:"numeric",month:"short"}),r[1]!=null?fmt(r[1],1):"–",r[2]!=null?fmt(r[2],1):"–",r[3]!=null?fmt(r[3],1):"–"])];
+  }else if(mode==="s"){
+    const st=startDate();
+    if(!st){head="Seit Start";tiles="";body=`<p class="sub">Noch keine Daten. Sobald du Gewicht, Bauchumfang oder Trainings einträgst, siehst du hier deine ganze Entwicklung.</p>`;table=[[]]}
+    else{
+      const span=(new Date(today()+"T12:00")-new Date(st+"T12:00"))/864e5,weekly=span<=182;
+      const buckets=[];
+      if(weekly){let a=weekRange(st)[0];while(a<=today()){const b=addDays(a,6);buckets.push({a,b,lab:dlabel(a,{day:"numeric",month:"numeric"})});a=addDays(a,7)}}
+      else{let m=st.slice(0,7);while(m<=today().slice(0,7)){buckets.push({a:m+"-01",b:monthEnd(m),lab:MONTHS[+m.slice(5)-1]+" "+m.slice(2,4)});m=shiftMonth(m,1)}}
+      buckets.forEach(k=>{k.w=meanOf(ws.filter(x=>x[0]>=k.a&&x[0]<=k.b).map(x=>x[1]));k.c=meanOf(wa.filter(x=>x[0]>=k.a&&x[0]<=k.b).map(x=>x[1]));k.s=strengthIdx(k.a,k.b)});
+      const unit=weekly?"Woche ab":"Monat";
+      const wsl=buckets.map(k=>({lab:k.lab,y:k.w,y2:k.w,tip:[[unit,k.lab],["Ø Gewicht",k.w!=null?fmt(k.w,1)+" kg":"–"]]}));
+      const csl=buckets.map(k=>({lab:k.lab,y:k.c,y2:k.c,tip:[[unit,k.lab],["Ø Bauchumfang",k.c!=null?fmt(k.c,1)+" cm":"–"]]}));
+      const fv=a=>a.filter(v=>v!=null);const wv=fv(buckets.map(k=>k.w)),cv=fv(buckets.map(k=>k.c)),now=strengthIdx(addDays(today(),-27),today()),iNow=meanOf(Object.values(now));
+      const n=buckets.length,xl=n<=1?[0]:n<=4?buckets.map((_,i)=>i):[0,Math.round((n-1)/3),Math.round(2*(n-1)/3),n-1];
+      head=periodLabel("s");
+      tiles=deltaTile(wv.length>1?wv[wv.length-1]-wv[0]:null,"kg",true,1,"Gewicht seit Start")+deltaTile(cv.length>1?cv[cv.length-1]-cv[0]:null,"cm",true,1,"Bauch seit Start")+deltaTile(iNow!=null?iNow-100:null,"%",false,0,"Kraft seit Start");
+      body=`<h3 class="ovh">Gewicht <small>${weekly?"Wochenschnitt":"Monatsschnitt"}</small></h3>${lineChart(wsl,{dots:true,connect:true,unit:"kg",aria:"Gewicht seit Start",empty:"Noch keine Gewichtswerte.",xl})}
+        <h3 class="ovh">Bauchumfang <small>${weekly?"Wochenschnitt":"Monatsschnitt"}</small></h3>${lineChart(csl,{dots:true,connect:true,unit:"cm",aria:"Bauchumfang seit Start",empty:"Noch kein Bauchumfang eingetragen.",xl})}
+        <h3 class="ovh">Kraft je Muskelgruppe <small>Index, Start = 100</small></h3>
+        <div class="smult">${VGROUPS.map(([g])=>{const sl=buckets.map(k=>({lab:k.lab,y:k.s[g],y2:k.s[g],tip:[[unit,k.lab],[g,k.s[g]!=null?fmt(k.s[g],0):"–"]]}));
+          const v=fv(sl.map(x=>x.y2)),last=v.length?v[v.length-1]:null;return`<div class="sm"><div class="smh"><span>${g}</span><b class="${last!=null&&last>100?"good":""}">${last!=null?fmt(last,0):"–"}${last!=null?` <small>${last>=100?"+":""}${fmt(last-100,0)} %</small>`:""}</b></div>${lineChart(sl,{mini:true,connect:true,dec:0,ref:100,minSpan:10,aria:"Kraft-Index "+g+" seit Start",empty:"–"})}</div>`}).join("")}</div>
+        <span class="cap">Prozent = Kraftzuwachs seit deinem ersten Training mit dieser Muskelgruppe.</span>`;
+      table=[[weekly?"Woche ab":"Monat","Ø Gewicht","Ø Bauch","Ø Kraft-Index"],...buckets.filter(k=>k.w!=null||k.c!=null||meanOf(Object.values(k.s))!=null).map(k=>[k.lab,k.w!=null?fmt(k.w,1):"–",k.c!=null?fmt(k.c,1):"–",(()=>{const v=meanOf(Object.values(k.s));return v!=null?fmt(v,0):"–"})()])];
+    }
   }else{
     const months=MONTHS.map((m,i)=>{const k=cy+"-"+pad(i+1),a=k+"-01",b=monthEnd(k);
       return{k,lab:m,w:meanOf(ws.filter(x=>x[0]>=a&&x[0]<=b).map(x=>x[1])),c:meanOf(wa.filter(x=>x[0]>=a&&x[0]<=b).map(x=>x[1])),s:strengthIdx(a,b)}});
@@ -994,11 +1036,11 @@ function overviewCard(){
     table=[["Monat","Ø Gewicht","Ø Bauch","Ø Kraft-Index"],...months.filter(m=>m.w!=null||m.c!=null||meanOf(Object.values(m.s))!=null).map(m=>[m.lab,m.w!=null?fmt(m.w,1):"–",m.c!=null?fmt(m.c,1):"–",(()=>{const v=meanOf(Object.values(m.s));return v!=null?fmt(v,0):"–"})()])];
   }
   return`<section class="card stack ov">
-    <div class="row"><div class="seg ovseg" role="group" aria-label="Zeitraum"><button data-act="ovmode" data-v="m" aria-pressed="${mode==="m"}">Monat</button><button data-act="ovmode" data-v="y" aria-pressed="${mode==="y"}">Jahr</button></div>
-      <div class="ovnav"><button data-act="ovnav" data-v="-1" aria-label="Zurück">‹</button><span>${head}</span><button data-act="ovnav" data-v="1" aria-label="Weiter">›</button></div></div>
+    <div class="row"><div class="seg ovseg" role="group" aria-label="Zeitraum"><button data-act="ovmode" data-v="m" aria-pressed="${mode==="m"}">Monat</button><button data-act="ovmode" data-v="y" aria-pressed="${mode==="y"}">Jahr</button><button data-act="ovmode" data-v="s" aria-pressed="${mode==="s"}">Seit Start</button></div>
+      ${mode==="s"?`<span class="sub">${head}</span>`:`<div class="ovnav"><button data-act="ovnav" data-v="-1" aria-label="Zurück">‹</button><span>${head}</span><button data-act="ovnav" data-v="1" aria-label="Weiter">›</button></div>`}</div>
     <div class="tiles">${tiles}</div>
     ${body}
-    <details class="tbl"><summary>Werte als Tabelle</summary>${table.length>1?`<div class="tblw"><table><thead><tr>${table[0].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${table.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<p class="sub">Noch keine Werte in diesem Zeitraum.</p>`}</details>
+    ${tiles?"":""}<details class="tbl"><summary>Werte als Tabelle</summary>${table.length>1?`<div class="tblw"><table><thead><tr>${table[0].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${table.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<p class="sub">Noch keine Werte in diesem Zeitraum.</p>`}</details>
   </section>`;
 }
 function strengthBars(cur,prev,prevLabel){
@@ -1023,22 +1065,93 @@ document.addEventListener("keydown",e=>{const svg=document.activeElement&&docume
 document.addEventListener("focusout",()=>setTimeout(()=>{if(!document.activeElement||!document.activeElement.closest("svg.ch"))hideTip()},0));
 document.addEventListener("scroll",hideTip,{passive:true});
 
+// Zeitraum für Muskelgruppen-Auswertungen
+const PERIODS=[["w","Woche"],["m","Monat"],["y","Jahr"],["s","Seit Start"]];
+function periodRange(p,d){
+  if(p==="w")return weekRange(d);
+  if(p==="m")return[d.slice(0,7)+"-01",monthEnd(d.slice(0,7))];
+  if(p==="y")return[d.slice(0,4)+"-01-01",d.slice(0,4)+"-12-31"];
+  return[startDate()||today(),today()];
+}
+function startDate(){const c=[firstDate(),weights()[0]&&weights()[0][0],waists()[0]&&waists()[0][0]].filter(Boolean).sort();return c[0]||null}
+function periodLabel(p,d){if(p==="w"){const [a,b]=weekRange(d);return dlabel(a,{day:"numeric",month:"short"})+" – "+dlabel(b,{day:"numeric",month:"short"})}
+  if(p==="m")return new Date(d.slice(0,7)+"-15T12:00").toLocaleDateString("de-DE",{month:"long",year:"numeric"});if(p==="y")return d.slice(0,4);
+  const st=startDate();return st?"seit "+dlabel(st,{day:"numeric",month:"short",year:"numeric"}):"noch keine Daten"}
 function volumeCard(){
-  const vol=weekVolume(S.sel),max=20;
-  return`<section class="card stack"><h2>Sätze pro Muskel · diese Woche</h2>
-    <div class="vol">${VGROUPS.map(([g])=>{const v=vol[g];const cls=v>=10?"ok":v>=6?"mid":"";
-      return`<div class="vrow"><span>${g}</span><div class="vbar ${cls}"><i style="width:${Math.min(100,v/max*100)}%"></i><b style="left:50%"></b></div><span class="num">${fmt(v,v%1?1:0)}</span></div>`}).join("")}</div>
-    <span class="sub">Strich = 10 Sätze. Ab etwa 10 harten Sätzen pro Woche wachsen Muskeln deutlich besser, mehr als 20 bringt kaum noch etwas. Mitarbeitende Muskeln zählen halb.</span>
+  const p=S.volP||"w",[a,b]=periodRange(p,S.sel),vol=rangeVolume(a,b);
+  const end=b<today()?b:today(),days=Math.max(1,Math.round((new Date(end+"T12:00")-new Date(a+"T12:00"))/864e5)+1),weeks=p==="w"?1:Math.max(1,days/7);
+  const max=20;
+  return`<section class="card stack"><h2>Sätze pro Muskel</h2>
+    <div class="seg" role="group" aria-label="Zeitraum">${PERIODS.map(([k,l])=>`<button data-act="volp" data-v="${k}" aria-pressed="${k===p}">${l}</button>`).join("")}</div>
+    <span class="sub">${periodLabel(p,S.sel)}${p==="w"?"":` · ${fmt(weeks,weeks<10?1:0)} Wochen · Balken = Ø pro Woche`}</span>
+    ${p==="w"?"":`<div class="vrow wide vhead"><span></span><span></span><span class="num">Ø/Wo</span><span class="num sd">gesamt</span></div>`}
+    <div class="vol">${VGROUPS.map(([g])=>{const tot=vol[g],v=tot/weeks;const cls=v>=10?"ok":v>=6?"mid":"";
+      return`<div class="vrow${p==="w"?"":" wide"}" tabindex="0" data-tip="${esc(g)}|Ø pro Woche: ${fmt(v,1)}|Gesamt: ${fmt(tot,tot%1?1:0)} Sätze"><span>${g}</span><div class="vbar ${cls}"><i style="width:${Math.min(100,v/max*100)}%"></i><b style="left:50%"></b></div><span class="num">${fmt(v,p==="w"?(v%1?1:0):1)}</span>${p==="w"?"":`<span class="num sd">${fmt(tot,0)}</span>`}</div>`}).join("")}</div>
+    <span class="sub">Strich = 10 Sätze pro Woche. Ab etwa 10 harten Sätzen pro Woche wachsen Muskeln deutlich besser, mehr als 20 bringt kaum noch etwas. Mitarbeitende Muskeln zählen halb.</span>
   </section>`;
 }
 
 // ----- Food -----
+
+// ---------- Lebensmittel-Datenbank ----------
+// Bäcker: typische Richtwerte (lose Backwaren haben keine Nährwertpflicht – je nach Bäckerei ±20 %).
+// Edeka/Protein: Herstellerangaben laut fatsecret.de, Stand Okt. 2026; „ca.“ = geschätzt.
+// Gerichte: Richtwerte je Portion, je nach Zubereitung ±20–30 %.
+const FCATS=[["recent","Zuletzt"],["baecker","Bäcker"],["protein","Protein · Edeka"],["basis","Eiweiß-Basics"],["fruehstueck","Frühstück"],["gerichte","Gerichte & Kantine"],["snacks","Snacks & Getränke"],["mine","Meine"]];
+const F=(c,n,g,kcal,p)=>({c,n,g,kcal,p});
+const FOODS=[
+  // Bäcker (schwäbisches Sortiment, Richtwerte)
+  F("baecker","Laugenbrezel","1 Stück (80 g)",220,6),F("baecker","Butterbrezel","1 Stück (100 g)",330,7),F("baecker","Laugenbrötchen / Laugenweckle","1 Stück (70 g)",195,6),
+  F("baecker","Laugenstange","1 Stück (80 g)",225,7),F("baecker","Laugencroissant","1 Stück (75 g)",290,6),F("baecker","Seele (Dinkel, mit Salz & Kümmel)","1 Stück (120 g)",300,10),
+  F("baecker","Weckle / Brötchen hell","1 Stück (55 g)",140,5),F("baecker","Vollkornbrötchen","1 Stück (70 g)",170,6),F("baecker","Körnerbrötchen","1 Stück (80 g)",235,8),
+  F("baecker","Käsebrötchen / Käsestange","1 Stück (100 g)",310,13),F("baecker","Belegtes Brötchen Schinken-Käse","1 Stück (150 g)",380,20),F("baecker","Belegtes Brötchen Salami","1 Stück (130 g)",400,15),
+  F("baecker","Belegte Laugenstange Schinken-Käse","1 Stück (160 g)",430,21),F("baecker","Leberkäswecken","1 Stück (160 g)",460,16),F("baecker","Puten-/Hähnchen-Sandwich","1 Stück (180 g)",360,22),
+  F("baecker","Mischbrot","1 Scheibe (50 g)",115,4),F("baecker","Dinkelvollkornbrot","1 Scheibe (50 g)",105,4),F("baecker","Croissant (Butter)","1 Stück (60 g)",250,5),
+  F("baecker","Schokocroissant","1 Stück (80 g)",340,6),F("baecker","Berliner / Krapfen","1 Stück (75 g)",290,5),F("baecker","Apfeltasche","1 Stück (110 g)",300,3),
+  F("baecker","Käsekuchen","1 Stück (120 g)",300,9),F("baecker","Streuselkuchen","1 Stück (100 g)",380,5),F("baecker","Bienenstich","1 Stück (100 g)",360,5),
+  F("baecker","Latte Macchiato (Vollmilch)","1 Glas (300 ml)",165,9),F("baecker","Cappuccino (Vollmilch)","1 Tasse (200 ml)",85,4),F("baecker","Kaffee schwarz","1 Tasse",2,0),
+  // Protein-Produkte bei Edeka
+  F("protein","gut&günstig High Protein Pudding Vanille","1 Becher (200 g)",160,20),F("protein","Ehrmann High Protein Pudding Erdbeere","1 Becher (200 g)",114,20),
+  F("protein","EDEKA Proteinjoghurt Heidelbeere","150 g",98,15),F("protein","EDEKA Herzstücke High Protein Milchreis","1 Becher (200 g)",194,17),
+  F("protein","EDEKA Herzstücke High Protein Quarkcreme (ca.)","1 Becher (200 g)",140,20),F("protein","EDEKA Herzstücke Protein-Brötchen (ca. 70 g)","1 Stück",193,15),
+  F("protein","EDEKA Herzstücke Eiweißbrot","2 Scheiben (80 g)",205,17),F("protein","gut&günstig Magerquark","1 Becher (500 g)",335,60),
+  F("protein","gut&günstig Skyr natur","1 Becher (500 g)",315,55),F("protein","Körniger Frischkäse (ca.)","1 Becher (200 g)",190,25),
+  F("protein","Protein-Riegel (z. B. Barebells, ca.)","1 Riegel (55 g)",200,20),F("protein","Proteinshake mit Wasser","30 g Pulver",115,24),
+  F("protein","Proteinshake mit 300 ml Milch 1,5 %","30 g Pulver",255,34),
+  // Eiweiß-Basics
+  F("basis","Hähnchenbrust, gebraten","150 g",240,46),F("basis","Putenbrust-Aufschnitt","100 g",100,21),F("basis","Thunfisch im eigenen Saft","1 Dose (140 g abgetropft)",150,33),
+  F("basis","Harzer Käse","100 g",112,27),F("basis","Eier","3 Stück",230,19),F("basis","Rührei aus 3 Eiern (mit etwas Fett)","1 Portion",270,20),
+  F("basis","Magerquark","250 g",168,30),F("basis","Skyr natur","250 g",158,28),F("basis","Hüttenkäse","200 g",195,25),
+  F("basis","Lachsfilet","150 g",310,30),F("basis","Rinderhack 5 %, gebraten","150 g",210,33),F("basis","Linsen, gekocht","200 g",230,18),F("basis","Tofu natur","200 g",250,28),
+  // Frühstück
+  F("fruehstueck","Haferflocken mit 250 ml Milch 1,5 %","60 g Flocken",340,16),F("fruehstueck","Müsli mit Joghurt 1,5 %","50 g + 150 g",310,11),
+  F("fruehstueck","Skyr mit Beeren & 30 g Haferflocken","1 Schale",300,30),F("fruehstueck","Brot mit Käse","2 Scheiben + 2 Scheiben Käse",420,20),
+  F("fruehstueck","Brot mit Putenbrust","2 Scheiben + 60 g",290,20),F("fruehstueck","Banane","1 Stück",105,1),F("fruehstueck","Apfel","1 Stück",80,0),
+  // Gerichte & Kantine
+  F("gerichte","Maultaschen in der Brühe","3 Stück",400,18),F("gerichte","Maultaschen geschmälzt mit Zwiebeln","4 Stück",650,24),F("gerichte","Käsespätzle","1 Teller (400 g)",900,35),
+  F("gerichte","Linsen mit Spätzle und Saitenwürstle","1 Teller",850,40),F("gerichte","Zwiebelrostbraten mit Spätzle","1 Teller",1000,50),F("gerichte","Schnitzel mit Pommes","1 Teller",950,40),
+  F("gerichte","Schnitzel mit Kartoffelsalat","1 Teller",800,38),F("gerichte","Currywurst mit Pommes","1 Portion",950,25),F("gerichte","Spaghetti Bolognese","1 Teller (400 g)",650,28),
+  F("gerichte","Chili con Carne","1 Teller (400 g)",500,32),F("gerichte","Hähnchenbrust mit Reis & Gemüse","1 Teller",550,45),F("gerichte","Salat mit Hähnchenstreifen (ohne Dressing)","1 große Schüssel",320,35),
+  F("gerichte","Salatdressing (Joghurt)","3 EL",60,2),F("gerichte","Salatdressing (Öl/Essig)","3 EL",180,0),F("gerichte","Döner Kebab","1 Stück",700,35),
+  F("gerichte","Dönerteller mit Salat & Reis","1 Teller",800,45),F("gerichte","Pizza Margherita","1 ganze (ca. 30 cm)",850,35),F("gerichte","Burger (Fast Food, groß)","1 Stück",550,28),
+  F("gerichte","Gyros mit Pommes & Tzatziki","1 Teller",1000,45),F("gerichte","Fischfilet mit Salzkartoffeln","1 Teller",550,35),F("gerichte","Schweinebraten mit Knödel & Soße","1 Teller",850,40),
+  F("gerichte","Leberkäse mit Kartoffelsalat","1 Teller",800,25),F("gerichte","Gemüsepfanne mit Hähnchen","1 Teller",450,38),F("gerichte","Ofenkartoffel mit Quark","1 Portion",400,20),
+  // Snacks & Getränke
+  F("snacks","Cola / Limo","0,5 l",210,0),F("snacks","Cola Zero / Light","0,5 l",1,0),F("snacks","Apfelschorle","0,5 l",120,0),F("snacks","Bier","0,5 l",210,2),
+  F("snacks","Alkoholfreies Bier","0,5 l",110,2),F("snacks","Wein","0,2 l",150,0),F("snacks","Chips","1 Tüte (150 g)",810,9),F("snacks","Schokolade","100 g",540,7),
+  F("snacks","Gummibärchen","100 g",340,7),F("snacks","Nüsse gemischt","1 Handvoll (30 g)",190,6),F("snacks","Eis (Kugel)","1 Kugel",120,2),F("snacks","Salzstangen","50 g",180,5)
+];
+const norm=t=>String(t||"").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss");
+function recentFoods(){const seen=new Set(),out=[];Object.keys(S.docs).filter(k=>k.startsWith("log-")).sort().reverse().forEach(k=>{const days=S.docs[k].days||{};Object.keys(days).sort().reverse().forEach(d=>(days[d].food||[]).slice().reverse().forEach(f=>{const key=norm(f.n);if(f.n&&!seen.has(key)&&out.length<15){seen.add(key);out.push({c:"recent",n:f.n.replace(/ \(×[\d,]+\)$/,""),g:f.g||"",kcal:f.base?f.base.kcal:f.kcal,p:f.base?f.base.p:f.p})}}))});return out}
+const myFoods=()=>(settings().myfoods||[]).map(f=>Object.assign({c:"mine"},f));
+
 let presetList=[];
 function viewFood(){
   const g=goals(),t=totals(S.sel),food=dayObj(S.sel).food||[];
-  const seen=new Set(),recent=[];
-  Object.keys(S.docs).filter(k=>k.startsWith("log-")).sort().reverse().forEach(k=>{const days=S.docs[k].days||{};Object.keys(days).sort().reverse().forEach(d=>(days[d].food||[]).slice().reverse().forEach(f=>{const key=(f.n||"").toLowerCase();if(f.n&&!seen.has(key)&&recent.length<8){seen.add(key);recent.push(f)}}))});
-  presetList=recent.concat(STARTERS.filter(s=>!seen.has(s.n.toLowerCase()))).slice(0,10);
+  const q=norm(S.fq||""),rec=recentFoods();const cat=S.fcat||(rec.length?"recent":"baecker"),mult=S.fmult||1;
+  const all=rec.concat(myFoods(),FOODS);
+  presetList=q?all.filter((f,i,arr)=>norm(f.n+" "+f.g).includes(q)&&arr.findIndex(x=>norm(x.n)===norm(f.n))===i).slice(0,40)
+    :cat==="recent"?rec:cat==="mine"?myFoods():FOODS.filter(f=>f.c===cat);
   return`
   <section class="card stack">
     <div class="scores">
@@ -1047,24 +1160,35 @@ function viewFood(){
     </div>
   </section>
   <section class="card stack">
-    <h2>Eintragen</h2>
+    <h2>Lebensmittel suchen</h2>
+    <input id="f-search" type="search" placeholder="z. B. Brezel, Maultaschen, Pudding" value="${esc(S.fq||"")}" autocomplete="off" aria-label="Lebensmittel suchen">
+    <div class="chips fcats" ${q?"hidden":""}>${FCATS.filter(([k])=>k!=="recent"||rec.length).map(([k,l])=>`<button class="chip" data-act="fcat" data-v="${k}" aria-pressed="${k===cat}">${l}</button>`).join("")}</div>
+    <div class="row"><span class="sub grow">Menge</span>${[0.5,1,1.5,2].map(m=>`<button class="chip" data-act="fmult" data-v="${m}" aria-pressed="${m===mult}">${m===0.5?"½":m===1.5?"1½":m}×</button>`).join("")}</div>
+    <div class="flist" id="flist">${foodList(mult,q,cat)}</div>
+    ${cat==="baecker"&&!q?`<p class="cap">Bäckerwerte sind Richtwerte – Backwaren haben keine Nährwertpflicht, je nach Bäckerei ±20 %.</p>`:""}
+  </section>
+  <section class="card stack">
+    <h2>Selbst eintragen</h2>
     <form id="food-form" class="stack">
       <div class="grid3">
         <label class="f" for="f-name">Was<input id="f-name" placeholder="z. B. Müsli mit Milch" autocomplete="off"></label>
         <label class="f" for="f-kcal">kcal<input id="f-kcal" inputmode="numeric" placeholder="450"></label>
         <label class="f" for="f-p">Protein g<input id="f-p" inputmode="decimal" placeholder="20"></label>
       </div>
+      <label class="savemy"><input id="f-save" type="checkbox"> Unter „Meine“ für später speichern</label>
       <button class="btn" type="submit">Hinzufügen</button>
     </form>
-    <div><span class="sub">Schnell hinzufügen${recent.length?"":" (Richtwerte)"}</span>
-    <div class="chips" style="margin-top:6px">${presetList.map((f,i)=>`<button class="chip" data-act="preset" data-v="${i}">${esc(f.n)} <small>${fmt(f.kcal)} kcal · ${fmt(f.p)} g</small></button>`).join("")}</div></div>
   </section>
   <section class="card"><h2>${S.sel===today()?"Heute gegessen":dlabel(S.sel)}</h2>
     ${food.length?`<div class="list">${food.map((f,i)=>`<div class="item"><div class="grow">${esc(f.n)}</div><span class="num sub">${fmt(f.kcal)} kcal · ${fmt(f.p)} g</span><button class="x" data-act="del-food" data-v="${i}" aria-label="${esc(f.n)} entfernen">×</button></div>`).join("")}</div>`
       :`<p class="sub">Noch nichts eingetragen. Tipp: Bei jeder Mahlzeit eine Proteinquelle einplanen (Quark, Skyr, Fleisch, Fisch, Eier, Hülsenfrüchte).</p>`}
   </section>`;
 }
-function addFood(f){const day=dayObj(S.sel,true);day.food=day.food||[];day.food.push({n:f.n,kcal:Math.round(f.kcal||0),p:Math.round((f.p||0)*10)/10});touch("log-"+S.sel.slice(0,7));render();flash(f.n+" eingetragen")}
+function foodList(mult,q,cat){
+  if(!presetList.length)return`<p class="sub">${q?"Nichts gefunden – trag es unten selbst ein und speichere es unter „Meine“.":cat==="mine"?"Noch keine eigenen Lebensmittel. Unten eintragen und „für später speichern“ anhaken.":"Noch nichts."}</p>`;
+  return presetList.map((f,i)=>`<button class="fitem" data-act="preset" data-v="${i}"><span class="grow"><b>${esc(f.n)}</b><small>${esc(f.g||"")}${f.c==="mine"?" · Meine":""}</small></span><span class="num">${fmt(f.kcal*mult)} kcal<small>${fmt(f.p*mult)} g Protein</small></span><span class="plus" aria-hidden="true">+</span></button>`).join("");
+}
+function addFood(f,m){m=m||1;const day=dayObj(S.sel,true);day.food=day.food||[];day.food.push({n:f.n+(m!==1?" (×"+fmt(m,m%1?1:0)+")":""),g:f.g||"",kcal:Math.round((f.kcal||0)*m),p:Math.round((f.p||0)*m*10)/10,base:m!==1?{kcal:f.kcal,p:f.p}:undefined});touch("log-"+S.sel.slice(0,7));const y=window.scrollY;render();window.scrollTo(0,y);flash(f.n+" eingetragen")}
 
 
 const TEMPOS=[[0.5,"Langsam","0,5 %"],[0.7,"Empfohlen","0,7 %"],[1,"Schnell","1 %"]];
@@ -1299,6 +1423,7 @@ $("#view").addEventListener("submit",e=>{
   if(e.target.id!=="food-form")return;e.preventDefault();
   const n=$("#f-name").value.trim(),k=num($("#f-kcal").value),p=num($("#f-p").value);
   if(!n||k==null){flash("Bitte Name und kcal eintragen");return}
+  if($("#f-save")&&$("#f-save").checked){const st=S.docs.settings||(S.docs.settings={});st.myfoods=(st.myfoods||[]).filter(x=>norm(x.n)!==norm(n));st.myfoods.unshift({n,g:"1 Portion",kcal:k,p:p||0});touch("settings")}
   addFood({n,kcal:k,p:p||0});
 });
 $("#view").addEventListener("click",e=>{
@@ -1309,6 +1434,7 @@ $("#view").addEventListener("click",e=>{
   else if(a==="weight"){const w=num($("#w-in").value);if(w==null||w<30||w>300){flash("Gewicht in kg eingeben, z. B. 84,2");return}
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
   else if(a==="ovmode"){S.ovMode=v;render()}
+  else if(a==="volp"){S.volP=v;render()}
   else if(a==="ovnav"){const k=+v;if((S.ovMode||"m")==="m"){const m=shiftMonth(S.ovMonth||today().slice(0,7),k);if(m<=today().slice(0,7)){S.ovMonth=m;render()}}else{const y=(S.ovYear||+today().slice(0,4))+k;if(y<=+today().slice(0,4)){S.ovYear=y;render()}}}
   else if(a==="figmode"){FIGMODE=v;lsSet("formkurve-fig",v);render()}
   else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
@@ -1351,7 +1477,9 @@ $("#view").addEventListener("click",e=>{
   else if(a==="photo"){photoTarget=v;const fi=$("#photo-in");fi.value="";fi.click()}
   else if(a==="del-session"){const t=+v;if(S.confirmDel!==t){S.confirmDel=t;render();setTimeout(()=>{if(S.confirmDel===t){S.confirmDel=null;if(S.tab==="train")safeRender()}},4000);return}
     S.confirmDel=null;Object.keys(S.docs).filter(k=>k.startsWith("wo-")).forEach(k=>{const before=(S.docs[k].sessions||[]).length;S.docs[k].sessions=(S.docs[k].sessions||[]).filter(s=>s.t!==t);if(S.docs[k].sessions.length!==before)touch(k)});render();flash("Einheit gelöscht")}
-  else if(a==="preset"){const f=presetList[+v];if(f)addFood(f)}
+  else if(a==="preset"){const f=presetList[+v];if(f)addFood(f,S.fmult||1)}
+  else if(a==="fcat"){S.fcat=v;render()}
+  else if(a==="fmult"){S.fmult=+v;const el=$("#flist");if(el){el.innerHTML=foodList(S.fmult,norm(S.fq||""),S.fcat);document.querySelectorAll("[data-act=fmult]").forEach(b2=>b2.setAttribute("aria-pressed",+b2.dataset.v===S.fmult))}}
   else if(a==="del-food"){const d=dayObj(S.sel,true);(d.food||[]).splice(+v,1);touch(mk);render()}
   else if(a==="save-settings"){const st=S.docs.settings||(S.docs.settings={});
     const k=num($("#s-kcal").value),p=num($("#s-p").value),sw=num($("#s-start").value),tw=num($("#s-target").value);
@@ -1368,6 +1496,9 @@ $("#view").addEventListener("click",e=>{
 $("#rest-add").onclick=()=>{T.end=Math.max(T.end,Date.now())+30000;if(!T.iv){T.iv=setInterval(tickRest,250);$("#rest").classList.remove("over");$("#rest-label").textContent=T.label}tickRest()};
 $("#rest-stop").onclick=()=>stopRest(false);
 (function migratePlan(){const st=S.docs.settings||{};if((st.planV||1)<PLAN_V){if(st.swaps)st.swaps={};drafts={};saveDrafts();S.docs.settings=Object.assign(st,{planV:PLAN_V});touch("settings")}})();
+$("#view").addEventListener("input",e=>{if(e.target.id!=="f-search")return;S.fq=e.target.value;const q=norm(S.fq);const rec=recentFoods(),all=rec.concat(myFoods(),FOODS),cat=S.fcat||(rec.length?"recent":"baecker");
+  presetList=q?all.filter((f,i,arr)=>norm(f.n+" "+f.g).includes(q)&&arr.findIndex(x=>norm(x.n)===norm(f.n))===i).slice(0,40):cat==="recent"?rec:cat==="mine"?myFoods():FOODS.filter(f=>f.c===cat);
+  $("#flist").innerHTML=foodList(S.fmult||1,q,cat);const fc=document.querySelector(".fcats");if(fc)fc.hidden=!!q});
 $("#import-in").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(f)importBackup(f)});
 $("#photo-in").addEventListener("change",e=>onPhoto(e.target.files&&e.target.files[0]));
 render();
