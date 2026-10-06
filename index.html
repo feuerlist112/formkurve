@@ -161,6 +161,15 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 @media (prefers-reduced-motion:reduce){.exanim{display:grid;grid-template-columns:1fr 1fr;gap:4px;aspect-ratio:auto}.figimg .exim{position:static;height:auto;animation:none;opacity:1}}
 @media (prefers-color-scheme:dark){.exim{filter:invert(.9)}}
 .cap a{color:inherit}
+.figtabs{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:100%;background:var(--track);border-radius:8px;padding:2px}
+.figtabs button{border:0;border-radius:6px;padding:4px 0;background:transparent;color:var(--muted);font:600 11px var(--body);cursor:pointer}
+.figtabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
+.figbox{width:100%;display:flex;justify-content:center}
+.figimg .gearimg{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:var(--track)}
+.gfb{display:none;width:100%}
+.figbox.gerr .gearimg{display:none}
+.figbox.gerr .gfb{display:block}
+.figimg:has(.gerr) .gcap{display:none}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -351,13 +360,39 @@ const ILL={
 function illu(k){return`<svg class="illu" viewBox="0 0 120 90" role="img" aria-label="Symbolbild Gerät" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ILL[k]||""}</svg>`}
 // Zeichnungen: Everkinetic (CC BY-SA 4.0), Start- und Endposition – siehe img/ex/LICENSE.md
 const EK={"squat":"barbell-squat","goblet":"squat-to-bench-with-dumbbells","legpress":"leg-press","bench":"bench-press","chestpress":"machine-bench-press","incline":"dumbbell-incline-bench-press","latpull":"v-bar-pull-down","straightpull":"straight-arm-push-down","row":"seated-cable-rows","rowmachine":"seated-cable-rows","dbrow":"rear-deltoid-row-dumbbell","rdl":"romanian-dead-lift","legcurl":"seated-leg-curl","lunge":"dumbbell-lunges","legext":"leg-extensions","stepup":"step-ups-with-dumbbells","lateral":"lateral-dumbbell-raises","crunch":"seated-ab-crunch-with-cable","triceps":"triceps-pushdown-with-rope-and-cable","ohtriceps":"kneeling-triceps-extension-with-cable","tricepsmachine":"triceps-extensions-using-machine","dbcurl":"biceps-curl-with-dumbbell","cablecurl":"standing-biceps-curl-with-cable","bicepsmachine":"biceps-curl-with-machine","dbreardelt":"bent-over-rear-deltoid-raise-with-head-on-bench","cablefly":"cable-crossover","dbfly":"dumbbell-flys"};
+
+// Gerätefotos von Wikimedia Commons (freie Lizenzen; Urheber & Lizenz auf der verlinkten Dateiseite) – werden direkt von dort geladen
+const CABLE="Functional_Trainer_Exercise_Machine_at_Gym.jpg",DBS="Dumbbells_on_rack_20180112.jpg";
+const GEAR={legpress:"Leg_Press_Machine.jpg",latpull:"Lat_pulldown_machine_20180112.jpg",legext:"LegExtensionMachineExercise.JPG",
+  flymachine:"Chest_Fly_Machine_1.jpg",reversefly:"Chest_Fly_Machine_1.jpg",squat:"Power_Rack.JPG",rdl:"Olympic_barbell.jpg",kbswing:"Kettlebell_55.jpg",
+  cablepull:CABLE,straightpull:CABLE,row:CABLE,cablepress:CABLE,cablelateral:CABLE,crunch:CABLE,triceps:CABLE,ohtriceps:CABLE,cablecurl:CABLE,facepull:CABLE,pallof:CABLE,cablefly:CABLE,
+  goblet:DBS,incline:DBS,dbrow:DBS,ohp:DBS,lunge:DBS,stepup:DBS,lateral:DBS,dbcurl:DBS,dbreardelt:DBS,dbfly:DBS,
+  "c-treadmill":"Treadmill-gym.jpg","c-cross":"Elliptical_machine.jpg","c-bike":"Magnetic_resistance_stationary_bicycle_exercise_bike.JPG","c-rower":"Concept2_Indoor_Rowers.JPG"};
+// Zusätzliche Zeichnungen (Start/Ende) direkt von Commons
+const EKX={shoulderpress:["Shoulder-press-machine-1.png","Shoulder-press-machine-2.png"]};
+const commonsImg=(f,w)=>"https://commons.wikimedia.org/wiki/Special:FilePath/"+encodeURIComponent(f)+"?width="+(w||480);
+const commonsPage=f=>"https://commons.wikimedia.org/wiki/File:"+encodeURIComponent(f);
+let FIGMODE=(()=>{try{return JSON.parse(localStorage.getItem("formkurve-fig"))||"gear"}catch(e){return"gear"}})();
+function ekHtml(id,name){
+  const a=EK[id]?["img/ex/"+EK[id]+"-1.png","img/ex/"+EK[id]+"-2.png"]:EKX[id]?EKX[id].map(f=>commonsImg(f)):null;if(!a)return"";
+  return`<div class="exanim" role="img" aria-label="Bewegungsablauf: ${esc(name)}"><img class="exim s1" src="${a[0]}" alt="" loading="lazy"><img class="exim s2" src="${a[1]}" alt="" loading="lazy"></div>`;
+}
 function photoUrl(id){const ph=(settings().photos||{})[id];return ph&&PHOTO_URLS[ph]?PHOTO_URLS[ph]:null}
 function figure(id,obj,canPhoto){
-  const ph=photoUrl(id);
+  const ph=photoUrl(id),gear=GEAR[id],ek=EK[id]||EKX[id];
+  const mode=ph?"own":gear&&(FIGMODE==="gear"||!ek)?"gear":ek?"ek":"sym";
+  const fb=ek?ekHtml(id,obj.n):illu(obj.ill);
+  let img,cap;
+  if(mode==="own"){img=`<img src="${ph}" alt="Dein Foto: ${esc(obj.n)}" loading="lazy">`;cap=""}
+  else if(mode==="gear"){img=`<img class="gearimg" src="${commonsImg(gear)}" alt="Gerät: ${esc(obj.n)}" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('gerr')"><div class="gfb">${fb}</div>`;
+    cap=`<span class="cap gcap">Foto: <a href="${commonsPage(gear)}" target="_blank" rel="noopener">Wikimedia Commons</a> · ähnliches Gerät</span>`}
+  else if(mode==="ek"){img=fb;cap=`<span class="cap">Start ↔ Ende · <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener">${EKX[id]?"Wikimedia Commons":"Everkinetic"}, CC BY-SA</a></span>`}
+  else{img=fb;cap=`<span class="cap">Symbolbild</span>`}
+  const tabs=!ph&&gear&&ek?`<div class="figtabs" role="group" aria-label="Bildansicht"><button data-act="figmode" data-v="gear" aria-pressed="${mode==="gear"}">Gerät</button><button data-act="figmode" data-v="ek" aria-pressed="${mode==="ek"}">Ablauf</button></div>`:"";
   return`<div class="fig">
-    <div class="figimg">${ph?`<img src="${ph}" alt="Dein Foto: ${esc(obj.n)}" loading="lazy">`:EK[id]?`<div class="exanim" role="img" aria-label="Bewegungsablauf: ${esc(obj.n)}"><img class="exim s1" src="img/ex/${EK[id]}-1.png" alt="" loading="lazy"><img class="exim s2" src="img/ex/${EK[id]}-2.png" alt="" loading="lazy"></div>`:illu(obj.ill)}
+    <div class="figimg">${tabs}<div class="figbox">${img}</div>
       ${canPhoto&&ASSETS?`<button class="btn ghost small photo" data-act="photo" data-v="${id}">${ph?"Foto ändern":"Foto vom Gerät"}</button>`:""}
-      ${ph?"":EK[id]?`<span class="cap">Start ↔ Ende · <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener">Everkinetic, CC BY-SA 4.0</a></span>`:`<span class="cap">Symbolbild</span>`}</div>
+      ${cap}</div>
     <div class="figmus">${muscleMap(obj.mus,obj.mus2)}<span class="cap"><b>${obj.mus.map(m=>MUSN[m]).join(", ")}</b>${obj.mus2.length?" · mit: "+obj.mus2.map(m=>MUSN[m]).join(", "):""}</span></div>
   </div>`;
 }
@@ -1052,6 +1087,7 @@ $("#view").addEventListener("click",e=>{
   else if(a==="check"){const d=dayObj(S.sel,true);d.checks=d.checks||{};d.checks[v]=!d.checks[v];touch(mk);b.setAttribute("aria-pressed",d.checks[v])}
   else if(a==="weight"){const w=num($("#w-in").value);if(w==null||w<30||w>300){flash("Gewicht in kg eingeben, z. B. 84,2");return}
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
+  else if(a==="figmode"){FIGMODE=v;lsSet("formkurve-fig",v);render()}
   else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
   else if(a==="vid-save"){const u=(document.getElementById("vid-"+v).value||"").trim();
     if(!/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//.test(u)){flash("Bitte einen YouTube-Link einfügen");return}

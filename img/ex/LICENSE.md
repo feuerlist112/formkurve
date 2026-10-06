@@ -8,3 +8,9 @@ https://creativecommons.org/licenses/by-sa/4.0/deed.de
 
 Änderungen: zugeschnitten, verkleinert, Hintergrund transparent gemacht.
 Die geänderten Dateien stehen ebenfalls unter CC BY-SA 4.0.
+
+# Gerätefotos
+
+Die Gerätefotos werden nicht in diesem Repository gespeichert, sondern direkt von **Wikimedia Commons** geladen
+(https://commons.wikimedia.org). Alle Dateien dort stehen unter freien Lizenzen. Urheber und genaue Lizenz stehen auf der
+jeweiligen Dateiseite, die in der App unter jedem Foto verlinkt ist.
