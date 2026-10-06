@@ -206,7 +206,7 @@ const AREA={fh:"Freie Gewichte",lf:"Life Fitness Geräte",cab:"Kabelzug / X-Cros
 const PAT={knee:"Beine (Kniebeuge-Muster)",hinge:"Rückseite & Po",hpush:"Brust drücken",vpull:"Rücken – von oben ziehen",hpull:"Rücken – rudern",vpush:"Schultern drücken",uni:"Beine einzeln / Oberschenkel",shoulder:"Seitliche Schulter",core:"Rumpf",tri:"Trizeps (Armstrecker)",bi:"Bizeps (Armbeuger)",rear:"Hintere Schulter & oberer Rücken",fly:"Brust isoliert"};
 const LIB={
   squat:{n:"Kniebeuge (Langhantel)",area:"fh",pat:"knee",inc:2.5,start:20,bar:true},
-  goblet:{n:"Goblet Squat (Kurzhantel)",area:"fn",pat:"knee",inc:2,start:12},
+  goblet:{n:"Goblet Squat auf eine Bank (Kurzhantel)",area:"fn",pat:"knee",inc:2,start:12},
   legpress:{n:"Beinpresse",area:"lf",pat:"knee",inc:5,start:60},
   bench:{n:"Bankdrücken (Langhantel)",area:"fh",pat:"hpush",inc:2.5,start:20,bar:true},
   chestpress:{n:"Brustpresse",area:"lf",pat:"hpush",inc:2.5,start:25},
@@ -254,7 +254,7 @@ const restLabel=sec=>sec>=120?(sec/60).toLocaleString("de-DE")+" min":sec+" s";
 const sl=(def,sets,lo,hi,ss)=>({def,sets,lo,hi,ss:!!ss});
 const PLAN_V=3;
 const PLAN={
-  A:{name:"Ganzkörper A",short:"Tag A",mins:90,slots:[sl("squat",3,8,10),sl("bench",4,8,10),sl("latpull",4,10,12),sl("rdl",2,8,10),sl("ohp",3,10,12),sl("lateral",3,12,15,1),sl("triceps",3,10,15),sl("cablefly",3,12,15,1),sl("reversefly",2,12,15),sl("cablecurl",3,10,15,1),sl("abmachine",2,12,15)]},
+  A:{name:"Ganzkörper A",short:"Tag A",mins:90,slots:[sl("goblet",3,8,10),sl("bench",4,8,10),sl("latpull",4,10,12),sl("rdl",2,8,10),sl("ohp",3,10,12),sl("lateral",3,12,15,1),sl("triceps",3,10,15),sl("cablefly",3,12,15,1),sl("reversefly",2,12,15),sl("cablecurl",3,10,15,1),sl("abmachine",2,12,15)]},
   B:{name:"Ganzkörper B",short:"Tag B",mins:90,slots:[sl("legpress",3,10,12),sl("row",4,10,12),sl("incline",4,8,10),sl("cablepull",3,10,12),sl("legcurl",2,10,12,1),sl("facepull",3,12,15),sl("dbcurl",3,10,12,1),sl("ohtriceps",3,10,15),sl("lateral",4,12,15,1),sl("crunch",3,12,15)]},
   C:{name:"Geräte-Zirkel",short:"Zirkel",slots:[sl("legpress",2,12,15),sl("chestpress",2,12,15),sl("latpull",2,12,15),sl("legcurl",2,12,15),sl("rowmachine",2,12,15),sl("shoulderpress",2,12,15),sl("abmachine",2,12,15),sl("backext",2,12,15)]}
 };
@@ -282,7 +282,7 @@ const MX={
 };
 Object.keys(MX).forEach(k=>{LIB[k].mus=MX[k][0].split(" ");LIB[k].mus2=MX[k][1]?MX[k][1].split(" "):[];LIB[k].ill=MX[k][2]});
 const CARDIO={
-  treadmill:{n:"Laufband",mus:["quads","hams","calves"],mus2:["glutes"],ill:"treadmill",tip:"Steigung 3–8 % zügig gehen ist ideal zum Einstieg und schont die Gelenke."},
+  treadmill:{n:"Laufband",mus:["quads","hams","calves"],mus2:["glutes"],ill:"treadmill",tip:"Zügig gehen mit 3–8 % Steigung statt joggen: fast so viel Verbrauch, viel weniger Belastung für Knie und Sprunggelenke."},
   cross:{n:"Crosstrainer",mus:["quads","glutes"],mus2:["chest","upback","calves"],ill:"cross",tip:"Arme aktiv mitarbeiten lassen, Fersen auf den Pedalen."},
   bike:{n:"Ergometer (Rad)",mus:["quads"],mus2:["glutes","calves","hams"],ill:"bike",tip:"Sattel so hoch, dass das Knie unten leicht gebeugt bleibt. Trittfrequenz 80–90."},
   rower:{n:"Rudergerät",mus:["lats","upback","quads"],mus2:["biceps","glutes","hams"],ill:"rower",tip:"Reihenfolge: Beine – Oberkörper – Arme. Zurück in umgekehrter Reihenfolge."},
@@ -348,7 +348,7 @@ function figure(id,obj,canPhoto){
 }
 let ASSETS=null;
 
-const CHECKS_BASE=[["steps","8.000–10.000 Schritte"],["water","2,5 l Wasser"],["sleep","7–9 h Schlaf"],["train","Training oder 30 min Bewegung"]];
+const CHECKS_BASE=[["steps","Schrittziel erreicht"],["water","2,5 l Wasser"],["sleep","7–9 h Schlaf"],["train","Training oder 30 min Bewegung"]];
 const checks=()=>settings().creatine?CHECKS_BASE.concat([["creatine","Kreatin 5 g"]]):CHECKS_BASE;
 const STARTERS=[
   {n:"Magerquark 500 g",kcal:335,p:60},{n:"Skyr 450 g",kcal:285,p:50},{n:"Hähnchenbrust 200 g",kcal:220,p:46},
@@ -467,6 +467,13 @@ function dueText(){
   const gap=Math.round((new Date(today()+"T12:00")-new Date(last.date+"T12:00"))/864e5);
   return gap<=0?"Heute erledigt ✓ – weiter übermorgen":gap===1?"Morgen ist wieder Trainingstag":"Heute ist Trainingstag";
 }
+const stepGoal=()=>settings().stepGoal||8000;
+function stepsInfo(){
+  const v=[];for(let i=0;i<7;i++){const d=dayObj(addDays(S.sel,-i));if(d.steps!=null)v.push(d.steps)}
+  const avg=v.length?v.reduce((a,b)=>a+b,0)/v.length:null;
+  return`<span class="sub">Ziel: ${fmt(stepGoal())} Schritte${avg!=null?` · Ø 7 Tage: ${fmt(Math.round(avg/100)*100)}`:""}. Steigere dich jede Woche um etwa 1.000, bis du bei 8.000–10.000 bist.</span>
+    <div class="row"><span class="sub grow">Schrittziel</span>${[6000,7000,8000,10000].map(g=>`<button class="chip" data-act="stepgoal" data-v="${g}" aria-pressed="${g===stepGoal()}">${fmt(g)}</button>`).join("")}</div>`;
+}
 function viewToday(){
   const g=goals(),t=totals(S.sel),day=dayObj(S.sel),ch=day.checks||{};
   const [mon,sun]=weekRange(S.sel);
@@ -496,6 +503,12 @@ function viewToday(){
       ${checks().map(([k,l])=>`<button class="check" data-act="check" data-v="${k}" aria-pressed="${!!ch[k]}"><span class="box">✓</span>${l}</button>`).join("")}
       <div class="check auto" aria-pressed="${protOk}"><span class="box">✓</span>Protein-Ziel<span class="sub">automatisch</span></div>
     </div>
+  </section>
+  <section class="card stack">
+    <h2>Schritte (Smartwatch)</h2>
+    <div class="row"><label class="f grow" for="steps-in">Schritte ${S.sel===today()?"heute":dlabel(S.sel)}<input id="steps-in" inputmode="numeric" placeholder="z. B. 6.500" value="${day.steps!=null?fmt(day.steps):""}"></label>
+    <button class="btn" data-act="steps" style="align-self:flex-end">Speichern</button></div>
+    ${stepsInfo()}
   </section>
   <section class="card stack">
     <h2>Körpergewicht</h2>
@@ -575,6 +588,8 @@ function histHtml(){
       :`<p class="sub">Noch keine Einheit gespeichert. Nach deinem ersten Training stehen hier Datum und Umfang.</p>`}
   </section>`;
 }
+function hrZone(){const age=settings().age;if(!age)return`<p class="hint">Locker heißt: Du kannst nebenbei noch in ganzen Sätzen sprechen.</p>`;
+  const max=Math.round(208-0.7*age);return`<p class="hint"><b>Puls für „locker“: ${Math.round(max*0.6)}–${Math.round(max*0.7)} Schläge/min</b> (60–70 % von geschätzt ${max}). Deine Smartwatch zeigt dir den Puls live an. Dazu gilt: Du kannst noch in ganzen Sätzen sprechen.</p>`}
 function viewCardio(){
   const last=allSessions().filter(s=>s.cardio).pop();
   const dev=S.cdev||(last&&last.cardio.dev)||"treadmill",type=S.ctype||"after";S.cdev=dev;S.ctype=type;
@@ -590,6 +605,8 @@ function viewCardio(){
     <div class="chips">${Object.keys(CARDIO).map(k=>`<button class="chip" data-act="cdev" data-v="${k}" aria-pressed="${k===dev}">${CARDIO[k].n}</button>`).join("")}</div>
     ${figure("c-"+dev,c,true)}
     <p class="hint">${c.tip}</p>
+    ${hrZone()}
+    <p class="note">Gelenkschonend: gehen statt joggen, keine Sprünge. Jedes Ausdauergerät hat ein Schild mit dem maximalen Nutzergewicht – kurz prüfen oder das Studio-Team fragen.</p>
   </section>
   <section class="card stack">
     <h2>Einheit</h2>
@@ -776,7 +793,7 @@ function adaptive(){
   let nu=0,de=0;x.forEach((xi,i)=>{nu+=(xi-mx)*(y[i]-my);de+=(xi-mx)**2});const slope=de?nu/de:0;
   const avgIn=intake.reduce((a,b)=>a+b,0)/intake.length;const tdee=avgIn-slope*7700;
   const w=avgTo(weights(),end)||my;
-  const target=Math.max(kcalFloor(),Math.round((tdee-tempo()/100*w*7700/7)/50)*50);
+  const target=Math.max(kcalFloor(),Math.round((tdee-deficitFor(w))/50)*50);
   return{tdee:Math.round(tdee/10)*10,perWeek:slope*7,avgIn:Math.round(avgIn),target};
 }
 function adaptiveCard(){
@@ -790,7 +807,11 @@ function adaptiveCard(){
     ${diff!=null&&Math.abs(diff)>=100?`<button class="btn" data-act="apply-adaptive" data-v="${a.target}">Kalorienziel auf ${fmt(a.target)} kcal setzen</button>`:`<p class="sub good">Dein aktuelles Ziel passt.</p>`}`}
   return`<section class="card stack"><h2>Wochen-Check · echter Verbrauch</h2>${body}</section>`;
 }
-function proteinFor(w){const tw=settings().targetW;return Math.round(((tw&&w-tw>15)?2.2*tw:2.0*w)/5)*5}
+const MAX_DEF=1000; // mehr als 1.000 kcal Defizit pro Tag nur mit ärztlicher Begleitung
+const deficitFor=w=>Math.min(MAX_DEF,tempo()/100*w*7700/7);
+// Protein: 2 g je kg – bei hohem Körperfett bezogen auf ein Referenzgewicht (BMI 25), sonst wären es unrealistisch viele Gramm
+function proteinFor(w,hCm){const st=settings();const h=(hCm||st.h)?(hCm||st.h)/100:null;const ref=h?25*h*h:null;
+  const base=(ref&&w>ref*1.3)?ref:(st.targetW&&w-st.targetW>15?st.targetW*1.1:w);return Math.round(2.0*base/5)*5}
 
 // ----- Progress -----
 function chart(ws){
@@ -830,7 +851,7 @@ function viewProg(){
   const waists=[];Object.keys(S.docs).filter(k=>k.startsWith("log-")).forEach(k=>{const d=S.docs[k].days||{};Object.keys(d).forEach(x=>{if(d[x].waist!=null)waists.push([x,d[x].waist])})});waists.sort((a,b)=>a[0]<b[0]?-1:1);
   const strength=Object.keys(LIB).map(id=>{const e=LIB[id];const ss=allSessions().filter(s=>s.ex&&s.ex[id]);if(!ss.length)return null;
     const top=s=>Math.max(...s.ex[id].map(x=>e.time?x[1]:x[0]||0));return{e,first:top(ss[0]),last:top(ss[ss.length-1]),n:ss.length}}).filter(Boolean);
-  const est=S.est||{sex:"m",age:"",h:"",w:a7?fmt(a7,1):"",act:"1.55"};
+  const est=S.est||{sex:s.sex||"m",age:s.age||"",h:s.h||"",w:a7?fmt(a7,1):"",act:"1.375"};
   return`
   <div class="tiles">
     <div class="tile"><div class="v">${fmt(a7,1)}</div><div class="l">Ø 7 Tage kg</div></div>
@@ -852,7 +873,7 @@ function viewProg(){
   <section class="card stack"><h2>Ziele</h2>
     <div><span class="sub">Abnehm-Tempo pro Woche (vom Körpergewicht)</span>
     <div class="seg" role="group" aria-label="Abnehm-Tempo" style="margin-top:6px">${TEMPOS.map(([v,l,p])=>`<button data-act="tempo" data-v="${v}" aria-pressed="${v===tempo()}">${l}<br><small>${p}</small></button>`).join("")}</div>
-    <span class="sub">0,7 % ist der beste Kompromiss: zügig Fett weg, Muskeln bleiben und wachsen als Einsteiger trotzdem.</span></div>
+    <span class="sub">0,7 % ist der beste Kompromiss. Das Defizit ist auf höchstens 1.000 kcal pro Tag begrenzt (≈ 1 kg pro Woche) – mehr nur mit ärztlicher Begleitung.</span></div>
     <div class="grid2">
       <label class="f" for="s-kcal">Kalorien pro Tag<input id="s-kcal" inputmode="numeric" value="${s.kcal||""}" placeholder="2200"></label>
       <label class="f" for="s-p">Protein pro Tag (g)<input id="s-p" inputmode="numeric" value="${s.protein||""}" placeholder="160"></label>
@@ -873,7 +894,7 @@ function viewProg(){
           <option value="1.55"${est.act==="1.55"?" selected":""}>Teils auf den Beinen, 3× Training</option>
           <option value="1.725"${est.act==="1.725"?" selected":""}>Körperlich aktiv, 3× Training</option></select></label>
         <button class="btn ghost" data-act="estimate">Ausrechnen</button>
-        ${S.estRes?`<p class="note">Erhaltungsbedarf ca. <b>${fmt(S.estRes.tdee)} kcal</b>. Für ${fmt(tempo(),1)} % pro Woche: <b>${fmt(S.estRes.kcal)} kcal</b> (rund ${fmt(S.estRes.def)} kcal darunter, nie unter dem Grundumsatz) und <b>${fmt(S.estRes.p)} g Protein</b> (2 g je kg). Nach 2–3 Wochen rechnet der Wochen-Check mit deinen echten Daten nach.</p><button class="btn" data-act="apply-est">Als Ziele übernehmen</button>`:""}
+        ${S.estRes?`<p class="note">Erhaltungsbedarf ca. <b>${fmt(S.estRes.tdee)} kcal</b>. Für ${fmt(tempo(),1)} % pro Woche: <b>${fmt(S.estRes.kcal)} kcal</b> (rund ${fmt(S.estRes.def)} kcal darunter, höchstens 1.000, nie unter dem Grundumsatz) und <b>${fmt(S.estRes.p)} g Protein</b> (2 g je kg, bei hohem Gewicht bezogen auf ein gesundes Referenzgewicht). Nach 2–3 Wochen rechnet der Wochen-Check mit deinen echten Daten nach.</p><button class="btn" data-act="apply-est">Als Ziele übernehmen</button>`:""}
       </div>
     </details>
   </section>
@@ -928,12 +949,23 @@ function viewKnow(){
     </ul>
   </section>
   <section class="card stack know">
+    <h2>Bei hohem Startgewicht</h2>
+    <ul>
+      ${li("Vorher zum Hausarzt.","Lass Blutdruck, Blutzucker, Blutfette und ein EKG checken, bevor du intensiv trainierst. Ab 35 gibt es den Gesundheits-Check-up alle 3 Jahre auf Kassenkosten.","")}
+      ${li("Gelenke schonen.","Maschinen, Kabelzug und Kurzhanteln sind ideal. Kniebeuge zuerst als Goblet Squat auf eine Bank, bis die Technik sitzt. Gehen statt joggen, keine Sprünge.","")}
+      ${li("Gerätelimits beachten.","Viele Ausdauergeräte sind nur bis zu einem bestimmten Nutzergewicht zugelassen – das steht auf einem Schild am Gerät.","")}
+      ${li("Defizit begrenzt.","Die App plant höchstens 1.000 kcal unter dem Bedarf, das sind etwa 1 kg Fett pro Woche. Größere Defizite gehören in ärztliche Begleitung. In den ersten Wochen fällt die Waage durch Wasserverlust schneller, das ist normal.","")}
+      ${li("Ärztliche Möglichkeiten.","Bei sehr hohem Startgewicht gibt es zusätzlich zu Training und Ernährung ärztliche Optionen, etwa Abnehmspritzen mit Semaglutid oder Tirzepatid oder spezielle Adipositas-Programme. Ob das für dich passt und wer die Kosten trägt, klärst du am besten mit deinem Hausarzt.","")}
+      ${li("Dein großer Vorteil:","Mit mehr Körperfett und als Einsteiger baust du im Defizit besonders gut Muskeln auf. Kraftwerte steigen anfangs fast jede Woche.","")}
+    </ul>
+  </section>
+  <section class="card stack know">
     <h2>Legale Hilfsmittel · gut belegt</h2>
     <div class="supp"><h3>Kreatin-Monohydrat</h3>
       <p>3–5 g jeden Tag, Uhrzeit egal, eine Ladephase ist unnötig. Es ist das am besten untersuchte Supplement für mehr Kraft und Muskelmasse und kostet etwa 1 € pro Woche. Am Anfang lagerst du 1–2 kg Wasser in den Muskeln ein. Das ist kein Fett, also nicht erschrecken. Bei Nierenerkrankungen vorher den Arzt fragen. <span class="src">ISSN-Position, Kreider et al. 2017</span></p>
       <button class="btn ${cr?"ghost":""} small" data-act="creatine">${cr?"Aus der Checkliste entfernen":"In die tägliche Checkliste aufnehmen"}</button></div>
     <div class="supp"><h3>Koffein</h3>
-      <p>Etwa 200 mg (2 Tassen Kaffee) 30–60 Minuten vor dem Training steigern Kraft und Ausdauer. Höchstens 400 mg am Tag und nach etwa 14 Uhr keins mehr, sonst leidet der Schlaf. Bei Bluthochdruck oder Herzproblemen vorher den Arzt fragen. <span class="src">EFSA 2015 · ISSN 2021</span></p></div>
+      <p>Etwa 200 mg (2 Tassen Kaffee) 30–60 Minuten vor dem Training steigern Kraft und Ausdauer. Höchstens 400 mg am Tag und nach etwa 14 Uhr keins mehr, sonst leidet der Schlaf. Bei Bluthochdruck oder Herzproblemen vorher den Arzt fragen und den Blutdruck beim Check-up messen lassen. <span class="src">EFSA 2015 · ISSN 2021</span></p></div>
     <div class="supp"><h3>Proteinpulver</h3>
       <p>Whey oder Mehrkomponenten-Protein ist kein Wundermittel, aber praktisch, wenn du dein Proteinziel mit Essen nicht schaffst. Ein Shake mit 30 g Pulver liefert etwa 24 g Protein.</p></div>
   </section>
@@ -981,6 +1013,9 @@ $("#view").addEventListener("click",e=>{
   else if(a==="check"){const d=dayObj(S.sel,true);d.checks=d.checks||{};d.checks[v]=!d.checks[v];touch(mk);b.setAttribute("aria-pressed",d.checks[v])}
   else if(a==="weight"){const w=num($("#w-in").value);if(w==null||w<30||w>300){flash("Gewicht in kg eingeben, z. B. 84,2");return}
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
+  else if(a==="steps"){const n=num(String($("#steps-in").value).replace(/\./g,""));if(n==null||n<0||n>100000){flash("Schritte als Zahl eintragen");return}
+    const d=dayObj(S.sel,true);d.steps=Math.round(n);d.checks=d.checks||{};d.checks.steps=n>=stepGoal();touch(mk);render();flash(n>=stepGoal()?"Schrittziel geschafft":"Schritte gespeichert")}
+  else if(a==="stepgoal"){const st=S.docs.settings||(S.docs.settings={});st.stepGoal=+v;touch("settings");render()}
   else if(a==="waist"){const w=num($("#waist-in").value);if(w==null||w<40||w>250){flash("Umfang in cm eingeben");return}dayObj(S.sel,true).waist=w;touch(mk);render();flash("Bauchumfang gespeichert")}
   else if(a==="plan"){S.trainPlan=v;S.swapOpen=null;render()}
   else if(a==="swap-open"){S.swapOpen=S.swapOpen===v?null:v;render()}
@@ -1018,9 +1053,9 @@ $("#view").addEventListener("click",e=>{
   else if(a==="estimate"){const sex=$("#e-sex").value,age=num($("#e-age").value),h=num($("#e-h").value),w=num($("#e-w").value),act=$("#e-act").value;
     S.est={sex,age:$("#e-age").value,h:$("#e-h").value,w:$("#e-w").value,act};
     if(!age||!h||!w){flash("Alter, Größe und Gewicht eintragen");render();return}
-    const bmr=10*w+6.25*h-5*age+(sex==="m"?5:-161),tdee=bmr*num(act),def=tempo()/100*w*7700/7;
-    S.estRes={sex,tdee:Math.round(tdee/10)*10,def:Math.round(def/10)*10,kcal:Math.max(sex==="m"?1500:1200,Math.round(bmr/50)*50,Math.round((tdee-def)/50)*50),p:proteinFor(w)};render()}
-  else if(a==="apply-est"){const st=S.docs.settings||(S.docs.settings={});st.kcal=S.estRes.kcal;st.protein=S.estRes.p;st.sex=S.estRes.sex;touch("settings");S.estRes=null;render();flash("Ziele übernommen")}
+    const bmr=10*w+6.25*h-5*age+(sex==="m"?5:-161),tdee=bmr*num(act),def=deficitFor(w);
+    S.estRes={sex,tdee:Math.round(tdee/10)*10,def:Math.round(def/10)*10,kcal:Math.max(sex==="m"?1500:1200,Math.round(bmr/50)*50,Math.round((tdee-def)/50)*50),p:proteinFor(w,h),age,h};render()}
+  else if(a==="apply-est"){const st=S.docs.settings||(S.docs.settings={});st.kcal=S.estRes.kcal;st.protein=S.estRes.p;st.sex=S.estRes.sex;st.age=S.estRes.age;st.h=S.estRes.h;touch("settings");S.estRes=null;render();flash("Ziele übernommen")}
 });
 
 $("#rest-add").onclick=()=>{T.end=Math.max(T.end,Date.now())+30000;if(!T.iv){T.iv=setInterval(tickRest,250);$("#rest").classList.remove("over");$("#rest-label").textContent=T.label}tickRest()};
