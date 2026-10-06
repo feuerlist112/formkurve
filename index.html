@@ -170,6 +170,9 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .figbox.gerr .gearimg{display:none}
 .figbox.gerr .gfb{display:block}
 .figimg:has(.gerr) .gcap{display:none}
+.zones{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.zones>div{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.zones b{font-family:var(--display);font-size:20px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -304,18 +307,24 @@ const MX={
 };
 Object.keys(MX).forEach(k=>{LIB[k].mus=MX[k][0].split(" ");LIB[k].mus2=MX[k][1]?MX[k][1].split(" "):[];LIB[k].ill=MX[k][2]});
 const CARDIO={
-  treadmill:{n:"Laufband",mus:["quads","hams","calves"],mus2:["glutes"],ill:"treadmill",tip:"Zügig gehen mit 3–8 % Steigung statt joggen: fast so viel Verbrauch, viel weniger Belastung für Knie und Sprunggelenke."},
+  treadmill:{n:"Laufband",mus:["quads","hams","calves"],mus2:["glutes"],ill:"treadmill",tread:true,tip:"Steigung statt Tempo: Mit 5–10 % Steigung gehend erreichst du fast denselben Puls und Verbrauch wie beim langsamen Joggen – bei einem Bruchteil der Gelenkbelastung. Halte dich nur leicht fest, wenn nötig."},
+  walk:{n:"Draußen gehen",mus:["quads","hams","calves"],mus2:["glutes"],ill:"walk",tip:"Zügig gehen, Arme mitschwingen. Hügel sind wie Steigung auf dem Laufband. Gute, gedämpfte Schuhe."},
+  bike:{n:"Ergometer (Rad)",mus:["quads"],mus2:["glutes","calves","hams"],ill:"bike",tip:"Gelenkschonendste Variante. Sattel so hoch, dass das Knie unten leicht gebeugt bleibt. Trittfrequenz 70–90."},
   cross:{n:"Crosstrainer",mus:["quads","glutes"],mus2:["chest","upback","calves"],ill:"cross",tip:"Arme aktiv mitarbeiten lassen, Fersen auf den Pedalen."},
-  bike:{n:"Ergometer (Rad)",mus:["quads"],mus2:["glutes","calves","hams"],ill:"bike",tip:"Sattel so hoch, dass das Knie unten leicht gebeugt bleibt. Trittfrequenz 80–90."},
   rower:{n:"Rudergerät",mus:["lats","upback","quads"],mus2:["biceps","glutes","hams"],ill:"rower",tip:"Reihenfolge: Beine – Oberkörper – Arme. Zurück in umgekehrter Reihenfolge."},
   stepper:{n:"Stepper",mus:["glutes","quads"],mus2:["calves","hams"],ill:"stepper",tip:"Aufrecht stehen, nicht auf die Griffe stützen."}
 };
 const CTYPES={
-  easy:{n:"Locker",d:"30–40 min gleichmäßig. Du kannst dabei noch in ganzen Sätzen sprechen (ca. 60–70 % der max. Herzfrequenz). Verbrennt Fett und stört die Erholung vom Krafttraining kaum."},
-  intervals:{n:"Intervalle",d:"20 min: 5 min einrollen, 6 × (1 min zügig + 2 min locker), 2 min ausrollen. Höchstens 1× pro Woche, nicht vor Beintraining."},
-  after:{n:"Nach Kraft",d:"20 min locker direkt nach den Gewichten. Bei Training alle 2 Tage kommst du so auf rund 70 Minuten pro Woche – und es stört den Muskelaufbau kaum."}
+  after:{n:"Nach Kraft",zone:"easy",min:20,d:"20 min locker direkt nach den Gewichten. Erst Kraft, dann Ausdauer: So bleibt die Beinkraft besser, für Muskelaufbau und Fettabbau ist die Reihenfolge egal."},
+  easy:{n:"Freier Tag",zone:"easy",min:40,d:"30–45 min locker an trainingsfreien Tagen – draußen gehen oder Laufband mit Steigung. Fängt bei 30 min an, jede Woche +5 min."},
+  intervals:{n:"Steigung",zone:"hard",min:30,from:5,d:"Steigungs-Intervalle, ab Woche 5, höchstens 1× pro Woche: 5 min einlaufen, dann 6 × (2 min steil bei 8–10 % + 2 min flach bei 2–3 %), 5 min auslaufen. Tempo bleibt gleich – nur die Steigung wechselt. Gelenkschonender Weg zu den Vorteilen von Intervalltraining."},
+  test:{n:"Fitness-Test",zone:"test",min:15,d:"Alle 4 Wochen: 5 min einlaufen, dann 10 min immer gleich – Laufband 5 km/h bei 5 % Steigung (oder Ergometer 75 Watt). Trag den Ø-Puls der letzten 3 Minuten ein. Sinkt er von Test zu Test, wirst du fitter."},
+  jog:{n:"Gehen–Joggen",zone:"hard",min:30,d:"Dein Weg zum Joggen – erst starten, wenn alle Punkte unten erfüllt sind. Dann: 6 × (1 min sehr locker joggen + 4 min gehen). Jede Woche 1 min mehr joggen, 1 min weniger gehen."}
 };
-const CARDIO_WEEK=70;
+// Wochenziel steigt langsam: 150 → 200 → 250 min (ACSM: über 225–250 min/Woche für deutliche Gewichtsabnahme)
+function firstDate(){const all=allSessions();return all.length?all[0].date:null}
+function weekNo(){const f=firstDate();if(!f)return 1;return Math.floor((new Date(today()+"T12:00")-new Date(f+"T12:00"))/864e5/7)+1}
+function cardioTarget(){const w=weekNo();return w<=4?150:w<=8?200:250}
 const MUSN={chest:"Brust",fdelt:"vordere Schulter",sdelt:"seitliche Schulter",rdelt:"hintere Schulter",biceps:"Bizeps",triceps:"Trizeps",abs:"gerader Bauch",obl:"seitlicher Bauch",quads:"Oberschenkel vorne",traps:"Nacken",upback:"oberer Rücken",lats:"breiter Rückenmuskel",lowback:"unterer Rücken",glutes:"Po",hams:"Oberschenkel hinten",calves:"Waden"};
 function bodyBase(ox){
   return `<g transform="translate(${ox} 0)" fill="var(--track)" stroke="var(--line)" stroke-width="1"><circle cx="50" cy="15" r="10"/><rect x="45" y="24" width="10" height="9" rx="2"/>
@@ -355,6 +364,7 @@ const ILL={
   cross:'<line x1="8" y1="84" x2="112" y2="84"/><circle cx="96" cy="66" r="12" class="fa"/><line x1="20" y1="80" x2="96" y2="80" stroke-width="3"/><path d="M34 64 L90 70" stroke-width="3"/><rect x="28" y="60" width="16" height="5" rx="2" class="fa"/><line x1="80" y1="70" x2="68" y2="14" stroke-width="3"/><line x1="86" y1="66" x2="78" y2="16" stroke-width="3" opacity=".5"/><rect x="88" y="22" width="16" height="10" rx="2" class="fa"/><line x1="96" y1="32" x2="96" y2="54"/>',
   bike:'<line x1="8" y1="84" x2="112" y2="84"/><line x1="24" y1="84" x2="96" y2="84" stroke-width="4"/><circle cx="84" cy="62" r="13" class="fa"/><path d="M40 84 L46 34 M46 34 L84 62 M60 46 L84 62" fill="none" stroke-width="3"/><rect x="34" y="28" width="22" height="6" rx="3" class="fa"/><path d="M84 62 L92 22 L104 20" fill="none" stroke-width="3"/><circle cx="60" cy="64" r="5" class="fa"/>',
   rower:'<line x1="8" y1="84" x2="112" y2="84"/><line x1="10" y1="74" x2="92" y2="74" stroke-width="3"/><circle cx="96" cy="62" r="14" class="fa"/><rect x="34" y="64" width="18" height="7" rx="2" class="fa"/><rect x="74" y="58" width="6" height="14" rx="2" class="fa"/><line x1="82" y1="56" x2="60" y2="52" stroke-width="1"/><line x1="60" y1="46" x2="60" y2="58" stroke-width="3"/><line x1="10" y1="74" x2="10" y2="84"/><line x1="92" y1="74" x2="92" y2="84"/>',
+  walk:'<line x1="6" y1="84" x2="114" y2="84"/><path d="M14 84 Q40 70 70 76 T114 66" fill="none" opacity=".45"/><circle cx="60" cy="14" r="7" class="fa"/><path d="M60 22 L58 50 M58 50 L46 78 M58 50 L70 64 L74 80 M59 30 L46 44 M59 30 L72 40" fill="none" stroke-width="4"/>',
   stepper:'<line x1="8" y1="84" x2="112" y2="84"/><rect x="20" y="74" width="80" height="8" rx="2" class="fa"/><rect x="34" y="58" width="22" height="6" rx="2" transform="rotate(-12 45 61)" class="fa"/><rect x="62" y="62" width="22" height="6" rx="2" transform="rotate(8 73 65)" class="fa"/><line x1="96" y1="74" x2="96" y2="20" stroke-width="3"/><path d="M96 26 L70 26 L66 34 M96 26 L104 34" fill="none" stroke-width="3"/><rect x="88" y="12" width="18" height="10" rx="2" class="fa"/>'
 };
 function illu(k){return`<svg class="illu" viewBox="0 0 120 90" role="img" aria-label="Symbolbild Gerät" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ILL[k]||""}</svg>`}
@@ -565,8 +575,9 @@ function viewToday(){
     <h2>Training</h2>
     <div class="row"><div class="grow"><h3>Als Nächstes: ${PLAN[np].name}</h3><span class="sub">${dueText()} · diese Woche ${wk} Einheiten</span></div>
     <button class="btn" data-act="start" data-v="${np}">Starten</button></div>
+    ${dueText().startsWith("Morgen")||dueText().startsWith("Heute erledigt")?`<div class="note row"><span class="grow"><b>Freier Tag:</b> 30–45 min locker gehen – draußen oder Laufband mit Steigung.</span><button class="btn small" data-act="start-cardio" data-v="easy">Los</button></div>`:""}
     <button class="btn ghost small" data-act="start" data-v="C" style="align-self:flex-start">Wenig Zeit? Geräte-Zirkel (ca. 30 min)</button>
-    <div class="row"><div class="grow"><h3>Ausdauer: ${fmt(cw)} von ${CARDIO_WEEK} min</h3>${bar(cw,CARDIO_WEEK)}</div><button class="btn ghost" data-act="start" data-v="X">Eintragen</button></div>
+    <div class="row"><div class="grow"><h3>Ausdauer: ${fmt(cw)} von ${cardioTarget()} min</h3>${bar(cw,cardioTarget())}</div><button class="btn ghost" data-act="start" data-v="X">Eintragen</button></div>
   </section>
   <section class="card">
     <h2>Tägliche Basics</h2>
@@ -652,24 +663,71 @@ function histHtml(){
   return`<section class="card"><h2>Letzte Einheiten</h2>
     ${hist.length?`<div class="list">${hist.map(s=>{let title,sub;
       if(s.cardio){const c=s.cardio;title=(CARDIO[c.dev]?CARDIO[c.dev].n:"Ausdauer")+" · "+(CTYPES[c.type]?CTYPES[c.type].n:"");
-        sub=[fmt(c.min)+" min",c.km?fmt(c.km,1)+" km":"",c.hr?"Ø "+fmt(c.hr)+" Puls":"",c.kcal?fmt(c.kcal)+" kcal":""].filter(Boolean).join(" · ")}
+        sub=[fmt(c.min)+" min",c.km?fmt(c.km,1)+" km":"",c.speed?fmt(c.speed,1)+" km/h":"",c.inc!=null?c.inc+" %":"",c.hr?"Ø "+fmt(c.hr)+" Puls":"",c.kcal?fmt(c.kcal)+" kcal":""].filter(Boolean).join(" · ")}
       else{const n=Object.values(s.ex||{}).reduce((a,x)=>a+x.length,0);const vol=Object.values(s.ex||{}).flat().reduce((a,x)=>a+(x[0]||0)*(x[1]||0),0);
         title=PLAN[s.plan]?PLAN[s.plan].name:s.plan;sub=n+" Sätze · "+fmt(vol)+" kg bewegt"}
       return`<div class="item"><div class="grow"><b>${esc(title)}</b><div class="sub">${dlabel(s.date)} · ${sub}</div></div><button class="btn ghost small" data-act="del-session" data-v="${s.t}">${S.confirmDel===s.t?"Wirklich löschen?":"Löschen"}</button></div>`}).join("")}</div>`
       :`<p class="sub">Noch keine Einheit gespeichert. Nach deinem ersten Training stehen hier Datum und Umfang.</p>`}
   </section>`;
 }
-function hrZone(){const age=settings().age;if(!age)return`<p class="hint">Locker heißt: Du kannst nebenbei noch in ganzen Sätzen sprechen.</p>`;
-  const max=Math.round(208-0.7*age);return`<p class="hint"><b>Puls für „locker“: ${Math.round(max*0.6)}–${Math.round(max*0.7)} Schläge/min</b> (60–70 % von geschätzt ${max}). Deine Smartwatch zeigt dir den Puls live an. Dazu gilt: Du kannst noch in ganzen Sätzen sprechen.</p>`}
+function zones(){
+  const st=settings();if(!st.age)return null;const max=Math.round(208-0.7*st.age);
+  if(st.restHr){const r=st.restHr,R=max-r;return{max,rest:r,easy:[Math.round(r+0.40*R),Math.round(r+0.59*R)],hard:[Math.round(r+0.60*R),Math.round(r+0.75*R)],kind:"Herzfrequenzreserve"}}
+  return{max,easy:[Math.round(max*0.6),Math.round(max*0.7)],hard:[Math.round(max*0.72),Math.round(max*0.82)],kind:"max. Puls"};
+}
+function hrZone(){
+  const z=zones(),st=settings();
+  const inp=`<div class="row"><label class="f grow" for="rhr-in">Ruhepuls (Smartwatch)<input id="rhr-in" inputmode="numeric" placeholder="z. B. 65" value="${st.restHr||""}"></label><button class="btn ghost" data-act="rhr" style="align-self:flex-end">Speichern</button></div>`;
+  if(!z)return`<p class="hint">Locker heißt: Du kannst nebenbei noch in ganzen Sätzen sprechen. Für genaue Pulswerte unter Fortschritt Alter eintragen.</p>`;
+  return`<div class="zones"><div><span class="unit">Locker</span><b>${z.easy[0]}–${z.easy[1]}</b></div><div><span class="unit">Zügig</span><b>${z.hard[0]}–${z.hard[1]}</b></div><div><span class="unit">Max ca.</span><b>${z.max}</b></div></div>
+  <p class="hint">Schläge pro Minute, berechnet über ${z.kind==="Herzfrequenzreserve"?"deine Herzfrequenzreserve (Ruhepuls "+z.rest+")":"den geschätzten Maximalpuls – mit Ruhepuls wird es genauer"}. „Locker“ = du kannst noch in ganzen Sätzen sprechen. Nimmst du Medikamente, die den Puls senken (z. B. Betablocker), gilt nur dieser Sprechtest.</p>${inp}`;
+}
+// Vorschlag für Laufband: Steigung/Tempo nach Puls der letzten gleichen Einheit
+function treadSuggest(type){
+  const z=zones();const last=allSessions().filter(x=>x.cardio&&x.cardio.dev==="treadmill"&&x.cardio.type===type&&x.cardio.inc!=null).pop();
+  if(!last)return{speed:type==="test"?5:4.5,inc:type==="test"?5:type==="intervals"?8:4,why:type==="test"?"Fester Test: 5 km/h bei 5 % Steigung.":"Erstes Mal: angenehm zügig gehen, dann nach Puls anpassen."};
+  const c=last.cardio;let speed=c.speed||4.5,inc=c.inc,why;
+  if(type==="test")return{speed:5,inc:5,why:"Fester Test: immer 5 km/h bei 5 % Steigung."};
+  const zr=z?(CTYPES[type].zone==="hard"?z.hard:z.easy):null;
+  if(!zr||!c.hr)why="Gleiche Einstellung wie letztes Mal – trag den Ø-Puls ein, dann passe ich an.";
+  else if(c.hr<zr[0]){if(inc<12){inc+=1;why=`Puls war ${c.hr} – unter ${zr[0]}. Heute 1 % mehr Steigung.`}else{speed=Math.round((speed+0.3)*10)/10;why=`Puls war ${c.hr} – unter ${zr[0]}. Heute etwas schneller.`}}
+  else if(c.hr>zr[1]){if(inc>0){inc-=1;why=`Puls war ${c.hr} – über ${zr[1]}. Heute 1 % weniger Steigung.`}else{speed=Math.max(3,Math.round((speed-0.3)*10)/10);why=`Puls war ${c.hr} – über ${zr[1]}. Heute etwas langsamer.`}}
+  else why=`Puls war ${c.hr} – genau im Ziel. Gleich lassen${CTYPES[type].min>c.min?", dafür 5 min länger":""}.`;
+  return{speed,inc,why,lastMin:c.min};
+}
+function testCard(){
+  const tests=allSessions().filter(x=>x.cardio&&x.cardio.type==="test"&&x.cardio.hr);
+  const due=tests.length?Math.floor((new Date(today()+"T12:00")-new Date(tests[tests.length-1].date+"T12:00"))/864e5)>=28:true;
+  return`<section class="card stack"><h2>Fitness-Test</h2>
+    ${tests.length?`<div class="list">${tests.slice(-6).map((x,i,arr)=>`<div class="item"><div class="grow">${dlabel(x.date)}<div class="sub">${CARDIO[x.cardio.dev]?CARDIO[x.cardio.dev].n:""}</div></div><span class="num"><b>${x.cardio.hr}</b> Puls${i>0?` <span class="${x.cardio.hr<arr[0].cardio.hr?"good":""}">(${x.cardio.hr-arr[0].cardio.hr>0?"+":""}${x.cardio.hr-arr[0].cardio.hr})</span>`:""}</span></div>`).join("")}</div>
+      <span class="sub">Gleiche Belastung, niedrigerer Puls = dein Herz arbeitet effizienter.</span>`:`<p class="sub">Mach den ersten Test bald, als Ausgangswert. Danach alle 4 Wochen.</p>`}
+    ${due?`<button class="btn ghost" data-act="ctype-go" data-v="test">${tests.length?"Test ist fällig":"Ersten Test machen"}</button>`:""}
+  </section>`;
+}
+function jogCriteria(){
+  const st=settings(),c=st.jogOk||{};
+  const items=[["walk","8 Wochen regelmäßig Steigung gehen, 40 min am Stück ohne Schmerzen"],["doc","Hausarzt hat Belastung freigegeben (Check-up, Blutdruck, EKG)"],["machine","Laufband ist für dein Gewicht zugelassen (Schild am Gerät)"],["pain","Keine Beschwerden an Knie, Sprunggelenk oder Achillessehne"]];
+  const ok=items.every(([k])=>c[k]);
+  return`<div class="checks">${items.map(([k,l])=>`<button class="check" data-act="jogok" data-v="${k}" aria-pressed="${!!c[k]}"><span class="box">✓</span>${l}</button>`).join("")}</div>
+    <p class="note">${ok?"Alle Punkte erfüllt – du kannst mit Gehen–Joggen starten. Gedämpfte Laufschuhe, sehr langsames Tempo, Puls im Bereich „Zügig“.":"Joggen belastet Knie und Sprunggelenke mit dem 2–3-fachen Körpergewicht pro Schritt. Bis alle Punkte erfüllt sind, ist Steigung gehen der bessere Weg zum gleichen Ziel."}</p>`;
+}
 function viewCardio(){
   const last=allSessions().filter(s=>s.cardio).pop();
   const dev=S.cdev||(last&&last.cardio.dev)||"treadmill",type=S.ctype||"after";S.cdev=dev;S.ctype=type;
-  const c=CARDIO[dev],wk=cardioWeek(S.sel);
+  const c=CARDIO[dev],wk=cardioWeek(S.sel),tgt=cardioTarget(),wn=weekNo(),ct=CTYPES[type];
+  const ts=c.tread?treadSuggest(type):null;
+  const early=ct.from&&wn<ct.from;
   return`
   <section class="card stack">
-    <div class="row"><div class="grow"><span class="unit">Ausdauer diese Woche</span><div class="big">${fmt(wk)}<small> / ${CARDIO_WEEK} min</small></div></div></div>
-    ${bar(wk,CARDIO_WEEK)}
-    <span class="sub">Ziel: rund 70 Minuten pro Woche – 20 min locker nach jedem Krafttraining. Dazu täglich 8.000–10.000 Schritte.</span>
+    <div class="row"><div class="grow"><span class="unit">Ausdauer diese Woche · Woche ${wn}</span><div class="big">${fmt(wk)}<small> / ${tgt} min</small></div></div></div>
+    ${bar(wk,tgt)}
+    <span class="sub">So kommst du hin: 20 min nach jedem Krafttraining plus 30–45 min an 1–2 freien Tagen. Das Ziel steigt von 150 über 200 auf 250 min pro Woche – ab etwa 225–250 min wird Ausdauer für die Gewichtsabnahme richtig wirksam.</span>
+  </section>
+  <section class="card stack">
+    <h2>Einheit</h2>
+    <div class="chips">${Object.keys(CTYPES).map(k=>`<button class="chip" data-act="ctype" data-v="${k}" aria-pressed="${k===type}">${CTYPES[k].n}</button>`).join("")}</div>
+    <p class="note">${ct.d}${early?` <b>Empfohlen ab Woche ${ct.from} – du bist in Woche ${wn}.</b>`:""}</p>
+    ${type==="jog"?jogCriteria():""}
   </section>
   <section class="card stack">
     <h2>Gerät</h2>
@@ -678,21 +736,22 @@ function viewCardio(){
     ${videoRow("c-"+dev,c.n)}
     <p class="hint">${c.tip}</p>
     ${hrZone()}
-    <p class="note">Gelenkschonend: gehen statt joggen, keine Sprünge. Jedes Ausdauergerät hat ein Schild mit dem maximalen Nutzergewicht – kurz prüfen oder das Studio-Team fragen.</p>
   </section>
   <section class="card stack">
-    <h2>Einheit</h2>
-    <div class="seg" role="group" aria-label="Art der Einheit">${Object.keys(CTYPES).map(k=>`<button data-act="ctype" data-v="${k}" aria-pressed="${k===type}">${CTYPES[k].n}</button>`).join("")}</div>
-    <p class="note">${CTYPES[type].d}</p>
+    <h2>Eintragen</h2>
+    ${ts?`<p class="advice">Vorschlag: ${fmt(ts.speed,1)} km/h bei ${ts.inc} % Steigung · ${ts.why}</p>`:""}
     <div class="grid2">
-      <label class="f" for="c-min">Dauer (min)<input id="c-min" inputmode="numeric" placeholder="${type==="intervals"?20:type==="after"?20:30}"></label>
-      <label class="f" for="c-km">Strecke (km, optional)<input id="c-km" inputmode="decimal"></label>
-      <label class="f" for="c-hr">Ø Puls (optional)<input id="c-hr" inputmode="numeric"></label>
-      <label class="f" for="c-kcal">kcal laut Gerät (optional)<input id="c-kcal" inputmode="numeric"></label>
+      <label class="f" for="c-min">Dauer (min)<input id="c-min" inputmode="numeric" placeholder="${ct.min}"></label>
+      <label class="f" for="c-hr">Ø Puls (Smartwatch)<input id="c-hr" inputmode="numeric" placeholder="${(()=>{const z=zones();return z?(ct.zone==="hard"?z.hard:z.easy).join("–"):""})()}"></label>
+      ${c.tread?`<label class="f" for="c-speed">Tempo (km/h)<input id="c-speed" inputmode="decimal" value="${ts?fmt(ts.speed,1):""}"></label>
+      <label class="f" for="c-inc">Steigung (%)<input id="c-inc" inputmode="decimal" value="${ts?ts.inc:""}"></label>`:
+      `<label class="f" for="c-km">Strecke (km, optional)<input id="c-km" inputmode="decimal"></label>`}
+      <label class="f" for="c-kcal">kcal laut Uhr (optional)<input id="c-kcal" inputmode="numeric"></label>
     </div>
     <button class="btn" data-act="save-cardio">Ausdauer speichern (${dlabel(S.sel,{day:"numeric",month:"short"})})</button>
-    <span class="sub">Die kcal-Anzeige der Geräte ist meist zu hoch. Iss sie deshalb nicht extra wieder auf.</span>
-  </section>`;
+    <span class="sub">Den Ø-Puls zeigt dir die Uhr nach dem Training. Mit ihm passt die App Steigung und Tempo fürs nächste Mal an. Die kcal-Anzeige ist meist zu hoch – iss sie nicht extra wieder auf.</span>
+  </section>
+  ${testCard()}`;
 }
 function viewTrain(){
   const p=S.trainPlan||nextPlan();S.trainPlan=p;
@@ -733,7 +792,7 @@ function viewTrain(){
 function saveCardio(){
   const min=num($("#c-min").value);if(!min||min<1||min>300){flash("Dauer in Minuten eintragen");return}
   const id="wo-"+S.sel.slice(0,7);const doc=S.docs[id]||(S.docs[id]={sessions:[]});doc.sessions=doc.sessions||[];
-  doc.sessions.push({date:S.sel,plan:"cardio",t:Date.now(),cardio:{dev:S.cdev,type:S.ctype,min,km:num($("#c-km").value),hr:num($("#c-hr").value),kcal:num($("#c-kcal").value)}});touch(id);
+  doc.sessions.push({date:S.sel,plan:"cardio",t:Date.now(),cardio:{dev:S.cdev,type:S.ctype,min,km:$("#c-km")?num($("#c-km").value):null,speed:$("#c-speed")?num($("#c-speed").value):null,inc:$("#c-inc")?num($("#c-inc").value):null,hr:num($("#c-hr").value),kcal:num($("#c-kcal").value)}});touch(id);
   const day=dayObj(S.sel,true);day.checks=day.checks||{};day.checks.train=true;touch("log-"+S.sel.slice(0,7));
   flash(fmt(min)+" min Ausdauer gespeichert");render();window.scrollTo(0,0);
 }
@@ -1019,7 +1078,11 @@ function viewKnow(){
     <ul>
       ${li("7–9 Stunden Schlaf.","Mit zu wenig Schlaf verloren Teilnehmer im Defizit mehr Muskeln und weniger Fett – bei gleichen Kalorien.","Nedeltcheva et al. 2010")}
       ${li("8.000–10.000 Schritte am Tag.","Alltagsbewegung verbrennt oft mehr als die Ausdauereinheiten und stört den Muskelaufbau nicht.","")}
-      ${li("Ausdauer locker halten.","Ruhige Einheiten auf Rad, Laufband oder Crosstrainer stören den Muskelaufbau kaum. Harte Intervalle nicht direkt vor Beintraining.","Wilson et al. 2012")}
+      ${li("Ausdauer stört den Muskelaufbau nicht.","Eine große Auswertung von 43 Studien fand keinen Nachteil für Muskelmasse und Maximalkraft, wenn man Kraft und Ausdauer kombiniert.","Schumann et al. 2022")}
+      ${li("Erst Kraft, dann Ausdauer.","In derselben Einheit bleibt so die Beinkraft besser. Für Muskelaufbau und Körperfett ist die Reihenfolge egal.","Eddens et al. 2018")}
+      ${li("Genug Minuten zählen.","Für eine deutliche Gewichtsabnahme braucht es über 225–250 Minuten Bewegung pro Woche. Die App steigert dein Ziel deshalb von 150 über 200 auf 250 Minuten.","ACSM, Donnelly et al. 2009")}
+      ${li("Intervalle – aber gelenkschonend.","Intervalltraining brachte im Schnitt etwas mehr Fettverlust als gleichmäßiges Training. Bei dir laufen Intervalle über die Steigung statt übers Tempo und starten ab Woche 5, höchstens 1× pro Woche.","Viana et al. 2019")}
+      ${li("Puls nach Herzfrequenzreserve.","Mit Ruhepuls und Alter berechnet die App deinen Bereich für „locker“ (40–59 %) und „zügig“ (60–75 %). Liegt dein Ø-Puls darunter oder darüber, passt sie Steigung und Tempo beim nächsten Mal an.","ACSM / Karvonen")}
     </ul>
   </section>
   <section class="card stack know">
@@ -1121,6 +1184,10 @@ $("#view").addEventListener("click",e=>{
   else if(a==="import"){const fi=$("#import-in");fi.value="";fi.click()}
   else if(a==="cdev"){S.cdev=v;render()}
   else if(a==="ctype"){S.ctype=v;render()}
+  else if(a==="ctype-go"){S.ctype=v;if(v==="test")S.cdev="treadmill";render();window.scrollTo(0,0)}
+  else if(a==="start-cardio"){S.trainPlan="X";S.ctype=v;S.tab="train";render();window.scrollTo(0,0)}
+  else if(a==="rhr"){const r=num($("#rhr-in").value);if(!r||r<35||r>110){flash("Ruhepuls zwischen 35 und 110 eintragen");return}const st=S.docs.settings||(S.docs.settings={});st.restHr=Math.round(r);touch("settings");render();flash("Pulszonen aktualisiert")}
+  else if(a==="jogok"){const st=S.docs.settings||(S.docs.settings={});st.jogOk=st.jogOk||{};st.jogOk[v]=!st.jogOk[v];touch("settings");render()}
   else if(a==="photo"){photoTarget=v;const fi=$("#photo-in");fi.value="";fi.click()}
   else if(a==="del-session"){const t=+v;if(S.confirmDel!==t){S.confirmDel=t;render();setTimeout(()=>{if(S.confirmDel===t){S.confirmDel=null;if(S.tab==="train")safeRender()}},4000);return}
     S.confirmDel=null;Object.keys(S.docs).filter(k=>k.startsWith("wo-")).forEach(k=>{const before=(S.docs[k].sessions||[]).length;S.docs[k].sessions=(S.docs[k].sessions||[]).filter(s=>s.t!==t);if(S.docs[k].sessions.length!==before)touch(k)});render();flash("Einheit gelöscht")}
