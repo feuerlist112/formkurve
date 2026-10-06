@@ -203,7 +203,7 @@ details summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent
 // ---------- Plan ----------
 // Bereiche laut Studioseite MC Shape Köngen: Freie Gewichte, Life Fitness Kraft-Zirkel / Gerätetraining, X-Cross, Dr. Wolff, Functional Area
 const AREA={fh:"Freie Gewichte",lf:"Life Fitness Geräte",cab:"Kabelzug / X-Cross",wolff:"Dr. Wolff",fn:"Functional Area"};
-const PAT={knee:"Beine (Kniebeuge-Muster)",hinge:"Rückseite & Po",hpush:"Brust drücken",vpull:"Rücken – von oben ziehen",hpull:"Rücken – rudern",vpush:"Schultern drücken",uni:"Beine einzeln / Oberschenkel",shoulder:"Seitliche Schulter",core:"Rumpf",tri:"Trizeps (Armstrecker)",bi:"Bizeps (Armbeuger)",rear:"Hintere Schulter & oberer Rücken"};
+const PAT={knee:"Beine (Kniebeuge-Muster)",hinge:"Rückseite & Po",hpush:"Brust drücken",vpull:"Rücken – von oben ziehen",hpull:"Rücken – rudern",vpush:"Schultern drücken",uni:"Beine einzeln / Oberschenkel",shoulder:"Seitliche Schulter",core:"Rumpf",tri:"Trizeps (Armstrecker)",bi:"Bizeps (Armbeuger)",rear:"Hintere Schulter & oberer Rücken",fly:"Brust isoliert"};
 const LIB={
   squat:{n:"Kniebeuge (Langhantel)",area:"fh",pat:"knee",inc:2.5,start:20,bar:true},
   goblet:{n:"Goblet Squat (Kurzhantel)",area:"fn",pat:"knee",inc:2,start:12},
@@ -241,24 +241,28 @@ const LIB={
   bicepsmachine:{n:"Bizepsmaschine",area:"lf",pat:"bi",inc:2.5,start:15},
   facepull:{n:"Face Pulls am Kabel (Seil)",area:"cab",pat:"rear",inc:2.5,start:10},
   reversefly:{n:"Reverse Butterfly (Maschine)",area:"lf",pat:"rear",inc:2.5,start:15},
-  dbreardelt:{n:"Vorgebeugtes Seitheben (Kurzhanteln)",area:"fh",pat:"rear",inc:1,start:4}
+  dbreardelt:{n:"Vorgebeugtes Seitheben (Kurzhanteln)",area:"fh",pat:"rear",inc:1,start:4},
+  cablefly:{n:"Butterfly am Kabel (Cable Fly)",area:"cab",pat:"fly",inc:2.5,start:7.5},
+  flymachine:{n:"Butterfly-Maschine",area:"lf",pat:"fly",inc:2.5,start:20},
+  dbfly:{n:"Kurzhantel-Fliegende (kg je Hantel)",area:"fh",pat:"fly",inc:1,start:6},
+  straightpull:{n:"Überzüge am Kabel, gestreckte Arme",area:"cab",pat:"vpull",inc:2.5,start:10}
 };
-["lateral","cablelateral","legext","legcurl","crunch","abmachine","pallof","wolffrot","triceps","ohtriceps","tricepsmachine","dbcurl","cablecurl","bicepsmachine","facepull","reversefly","dbreardelt"].forEach(k=>LIB[k].iso=true);
+["lateral","cablelateral","legext","legcurl","crunch","abmachine","pallof","wolffrot","triceps","ohtriceps","tricepsmachine","dbcurl","cablecurl","bicepsmachine","facepull","reversefly","dbreardelt","cablefly","flymachine","dbfly","straightpull"].forEach(k=>LIB[k].iso=true);
 // Pausen nach Studienlage: Grundübungen länger, Isolation kürzer
 function restFor(ex){return ex.ssNext?20:ex.time?60:ex.iso?90:ex.bar?180:150}
 const restLabel=sec=>sec>=120?(sec/60).toLocaleString("de-DE")+" min":sec+" s";
 const sl=(def,sets,lo,hi,ss)=>({def,sets,lo,hi,ss:!!ss});
-const PLAN_V=2;
+const PLAN_V=3;
 const PLAN={
-  A:{name:"Ganzkörper A",short:"Tag A",mins:65,slots:[sl("squat",3,8,10),sl("bench",3,8,10),sl("latpull",3,10,12),sl("rdl",2,8,10),sl("ohp",2,10,12),sl("lateral",3,12,15,1),sl("triceps",3,10,15),sl("cablecurl",2,10,15,1),sl("abmachine",2,12,15)]},
-  B:{name:"Ganzkörper B",short:"Tag B",mins:65,slots:[sl("legpress",3,10,12),sl("row",3,10,12),sl("incline",3,8,10),sl("legcurl",2,10,12,1),sl("facepull",2,12,15),sl("dbcurl",3,10,12,1),sl("ohtriceps",2,10,15),sl("lateral",3,12,15,1),sl("crunch",2,12,15)]},
+  A:{name:"Ganzkörper A",short:"Tag A",mins:90,slots:[sl("squat",3,8,10),sl("bench",4,8,10),sl("latpull",4,10,12),sl("rdl",2,8,10),sl("ohp",3,10,12),sl("lateral",3,12,15,1),sl("triceps",3,10,15),sl("cablefly",3,12,15,1),sl("reversefly",2,12,15),sl("cablecurl",3,10,15,1),sl("abmachine",2,12,15)]},
+  B:{name:"Ganzkörper B",short:"Tag B",mins:90,slots:[sl("legpress",3,10,12),sl("row",4,10,12),sl("incline",4,8,10),sl("cablepull",3,10,12),sl("legcurl",2,10,12,1),sl("facepull",3,12,15),sl("dbcurl",3,10,12,1),sl("ohtriceps",3,10,15),sl("lateral",4,12,15,1),sl("crunch",3,12,15)]},
   C:{name:"Geräte-Zirkel",short:"Zirkel",slots:[sl("legpress",2,12,15),sl("chestpress",2,12,15),sl("latpull",2,12,15),sl("legcurl",2,12,15),sl("rowmachine",2,12,15),sl("shoulderpress",2,12,15),sl("abmachine",2,12,15),sl("backext",2,12,15)]}
 };
 function resolve(p){
   const sw=(settings().swaps)||{};
   return PLAN[p].slots.map((s,i)=>{const key=p+"-"+i;const id=(sw[key]&&LIB[sw[key]])?sw[key]:s.def;const e=LIB[id];
     const prev=PLAN[p].slots[i-1],nxt=PLAN[p].slots[i+1];
-    return Object.assign({},e,{id,key,sets:s.sets,lo:e.time?e.lo:s.lo,hi:e.time?e.hi:s.hi,swapped:id!==s.def,ssNext:s.ss&&nxt?key.slice(0,2)+(i+1):null,ssPrev:!!(prev&&prev.ss)})});
+    return Object.assign({},e,{id,key,sets:learning()?Math.max(2,s.sets-1):s.sets,lo:e.time?e.lo:s.lo,hi:e.time?e.hi:s.hi,swapped:id!==s.def,ssNext:s.ss&&nxt?key.slice(0,2)+(i+1):null,ssPrev:!!(prev&&prev.ss)})});
 }
 // ---------- Muskeln & Symbolbilder ----------
 // [Hauptmuskeln, Mitbeteiligt, Symbolbild]
@@ -273,7 +277,8 @@ const MX={
   lateral:["sdelt","traps","dumbbell"],cablelateral:["sdelt","traps","cable"],
   plank:["abs","obl fdelt","mat"],crunch:["abs","obl","cable"],abmachine:["abs","obl","seated"],wolffrot:["obl","abs lowback","seated"],pallof:["obl abs","glutes","cable"],
   triceps:["triceps","","cable"],ohtriceps:["triceps","","cable"],tricepsmachine:["triceps","chest","seated"],dbcurl:["biceps","","dumbbell"],cablecurl:["biceps","","cable"],bicepsmachine:["biceps","","seated"],
-  facepull:["rdelt upback","traps","cable"],reversefly:["rdelt","upback","seated"],dbreardelt:["rdelt","upback","dumbbell"]
+  facepull:["rdelt upback","traps","cable"],reversefly:["rdelt","upback","seated"],dbreardelt:["rdelt","upback","dumbbell"],
+  cablefly:["chest","fdelt","cable"],flymachine:["chest","fdelt","seated"],dbfly:["chest","fdelt","bench"],straightpull:["lats","triceps","cable"]
 };
 Object.keys(MX).forEach(k=>{LIB[k].mus=MX[k][0].split(" ");LIB[k].mus2=MX[k][1]?MX[k][1].split(" "):[];LIB[k].ill=MX[k][2]});
 const CARDIO={
@@ -286,9 +291,9 @@ const CARDIO={
 const CTYPES={
   easy:{n:"Locker",d:"30–40 min gleichmäßig. Du kannst dabei noch in ganzen Sätzen sprechen (ca. 60–70 % der max. Herzfrequenz). Verbrennt Fett und stört die Erholung vom Krafttraining kaum."},
   intervals:{n:"Intervalle",d:"20 min: 5 min einrollen, 6 × (1 min zügig + 2 min locker), 2 min ausrollen. Höchstens 1× pro Woche, nicht vor Beintraining."},
-  after:{n:"Nach Kraft",d:"25 min locker direkt nach den Gewichten. Bei Training alle 2 Tage sammelst du so die 90 Minuten pro Woche ganz nebenbei – und es stört den Muskelaufbau kaum."}
+  after:{n:"Nach Kraft",d:"20 min locker direkt nach den Gewichten. Bei Training alle 2 Tage kommst du so auf rund 70 Minuten pro Woche – und es stört den Muskelaufbau kaum."}
 };
-const CARDIO_WEEK=90;
+const CARDIO_WEEK=70;
 const MUSN={chest:"Brust",fdelt:"vordere Schulter",sdelt:"seitliche Schulter",rdelt:"hintere Schulter",biceps:"Bizeps",triceps:"Trizeps",abs:"gerader Bauch",obl:"seitlicher Bauch",quads:"Oberschenkel vorne",traps:"Nacken",upback:"oberer Rücken",lats:"breiter Rückenmuskel",lowback:"unterer Rücken",glutes:"Po",hams:"Oberschenkel hinten",calves:"Waden"};
 function bodyBase(ox){
   return `<g transform="translate(${ox} 0)" fill="var(--track)" stroke="var(--line)" stroke-width="1"><circle cx="50" cy="15" r="10"/><rect x="45" y="24" width="10" height="9" rx="2"/>
@@ -578,7 +583,7 @@ function viewCardio(){
   <section class="card stack">
     <div class="row"><div class="grow"><span class="unit">Ausdauer diese Woche</span><div class="big">${fmt(wk)}<small> / ${CARDIO_WEEK} min</small></div></div></div>
     ${bar(wk,CARDIO_WEEK)}
-    <span class="sub">Ziel: 90 Minuten pro Woche, z. B. 3 × 30 min oder 3 × 15–20 min nach dem Krafttraining plus einmal länger am Wochenende.</span>
+    <span class="sub">Ziel: rund 70 Minuten pro Woche – 20 min locker nach jedem Krafttraining. Dazu täglich 8.000–10.000 Schritte.</span>
   </section>
   <section class="card stack">
     <h2>Gerät</h2>
@@ -591,7 +596,7 @@ function viewCardio(){
     <div class="seg" role="group" aria-label="Art der Einheit">${Object.keys(CTYPES).map(k=>`<button data-act="ctype" data-v="${k}" aria-pressed="${k===type}">${CTYPES[k].n}</button>`).join("")}</div>
     <p class="note">${CTYPES[type].d}</p>
     <div class="grid2">
-      <label class="f" for="c-min">Dauer (min)<input id="c-min" inputmode="numeric" placeholder="${type==="intervals"?20:type==="after"?25:30}"></label>
+      <label class="f" for="c-min">Dauer (min)<input id="c-min" inputmode="numeric" placeholder="${type==="intervals"?20:type==="after"?20:30}"></label>
       <label class="f" for="c-km">Strecke (km, optional)<input id="c-km" inputmode="decimal"></label>
       <label class="f" for="c-hr">Ø Puls (optional)<input id="c-hr" inputmode="numeric"></label>
       <label class="f" for="c-kcal">kcal laut Gerät (optional)<input id="c-kcal" inputmode="numeric"></label>
@@ -606,7 +611,7 @@ function viewTrain(){
   const d=draftFor(p);
   return`
   ${segHtml(p)}
-  ${PLAN[p].mins?`<p class="sub">≈ ${PLAN[p].mins} min Krafttraining, danach 25 min Ausdauer locker (Bereich Ausdauer → „Nach Kraft“).</p>`:""}
+  ${PLAN[p].mins?`<p class="sub">≈ ${learning()?PLAN[p].mins-15:PLAN[p].mins} min Krafttraining, danach 20 min Ausdauer locker (Bereich Ausdauer → „Nach Kraft“).</p>`:""}
   ${phaseNote()}
   <p class="note">${p==="C"?"Geräte-Zirkel an den Life-Fitness-Geräten: jede Station 2 Sätze, kurze Pausen. Ideal, wenn wenig Zeit ist oder die Freihantelfläche voll ist.":"Vorher 5 min locker aufwärmen und pro Grundübung 1–2 leichte Sätze. Schaffst du in allen Sätzen die obere Wiederholungszahl, schlägt die App beim nächsten Mal mehr Gewicht vor."} Gerät besetzt oder nicht da? Tippe auf <b>Tauschen</b>.</p>
   ${resolve(p).map(ex=>{const s=suggest(ex);const sets=d.sets[ex.id]||[];
@@ -684,7 +689,7 @@ function strengthCount(){return allSessions().filter(x=>!x.cardio).length}
 function learning(){return strengthCount()<6}
 function phaseNote(){
   const n=strengthCount();
-  if(n<6)return`<p class="note"><b>Phase 1 · Technik (Einheit ${n+1} von 6):</b> Gewichte so wählen, dass 2–3 Wiederholungen Reserve bleiben. Saubere Bewegung über den vollen Bewegungsumfang ist jetzt wichtiger als Gewicht.</p>`;
+  if(n<6)return`<p class="note"><b>Phase 1 · Einstieg (Einheit ${n+1} von 6):</b> Je Übung ein Satz weniger, damit sich Muskeln, Sehnen und Gelenke an die Belastung gewöhnen. Gewichte so wählen, dass 2–3 Wiederholungen Reserve bleiben. Saubere Bewegung über den vollen Bewegungsumfang ist jetzt wichtiger als Gewicht.</p>`;
   return`<p class="note"><b>Phase 2 · Aufbau:</b> Jeder Satz bis 1–2 Wiederholungen vor dem Muskelversagen. Schaffst du in allen Sätzen die obere Wiederholungszahl, erhöht die App das Gewicht.</p>`;
 }
 // ----- Satzpause -----
@@ -894,6 +899,7 @@ function viewKnow(){
     <ul>
       ${li("Ganzkörper, alle 2 Tage.","Tag A und B im Wechsel, also 3–4 Einheiten pro Woche. Jeder Muskel wird so fast 2× pro Woche trainiert. Das bringt mehr Wachstum als 1× pro Woche.","Schoenfeld et al. 2016")}
       ${li("Schwerpunkt Oberkörper.","Für Brust, Schultern, Arme und die V-Form bekommt der Oberkörper mehr Sätze. Seitheben und Face Pulls machen die Schultern breiter. Die Beine trainierst du mit weniger Sätzen weiter, für Kraft und Kalorienverbrauch.","")}
+      ${li("Viel Volumen, aber dosiert.","Für deine Schwerpunkte kommst du so auf etwa 15–20 Sätze pro Woche, das ist der obere sinnvolle Bereich. In den ersten 6 Einheiten macht die App je Übung einen Satz weniger. Sinkt deine Kraft zwei Trainings hintereinander oder schläfst du schlecht, lass für eine Woche je einen Satz weg.","Schoenfeld et al. 2017")}
       ${li("Supersätze sparen Zeit.","Zwei kleine Übungen für verschiedene Muskeln machst du direkt hintereinander und pausierst erst danach. Das spart rund 10 Minuten, ohne dass Muskelwachstum verloren geht.","Iversen et al. 2021")}
       ${li("Etwa 10–20 harte Sätze pro Muskel und Woche.","Mehr Sätze bringen mehr Muskel, bis etwa 20. Als Einsteiger reichen 10. Die App zeigt unter Fortschritt, wo du stehst.","Schoenfeld et al. 2017")}
       ${li("Nah ans Muskelversagen.","Stopp 1–2 Wiederholungen vorher. Nur in den ersten 6 Einheiten bewusst 2–3 Wiederholungen Reserve lassen, um die Technik zu lernen.","Robinson et al. 2024")}
