@@ -173,6 +173,53 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .zones{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .zones>div{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
 .zones b{font-family:var(--display);font-size:20px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ov .row{justify-content:space-between}
+.ovseg{grid-auto-columns:auto;min-width:150px}
+.ovnav{display:flex;align-items:center;gap:6px}
+.ovnav button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.ovnav span{min-width:104px;text-align:center;font-weight:600;font-size:14px}
+.ovh{font-size:14px;margin:6px 0 -6px}
+.ovh small,.tile .v small{font-size:12px;font-weight:500;color:var(--muted)}
+.chwrap{width:100%}
+svg.ch{width:100%;height:auto;display:block;touch-action:pan-y;outline:none}
+svg.ch:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+svg.ch text{fill:var(--muted);font:500 10px var(--body)}
+svg.ch .grid{stroke:var(--line);stroke-width:1}
+svg.ch .ref{stroke:var(--muted);stroke-width:1;opacity:.6}
+svg.ch .ln{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg.ch .dot{fill:var(--accent);opacity:.45}
+svg.ch .end{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+svg.ch .endlab{fill:var(--ink);font-weight:700;font-size:11px}
+svg.ch .xh{stroke:var(--ink);stroke-width:1;opacity:.5}
+svg.ch.mini .endlab{font-size:12px}
+.smult{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sm{background:var(--bg);border-radius:10px;padding:8px 6px 4px;min-width:0}
+.smh{display:flex;flex-direction:column;gap:0;font-size:11px;font-weight:600;color:var(--muted);padding:0 4px}
+.smh span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.smh b{color:var(--ink);font:700 18px var(--display);font-variant-numeric:tabular-nums}
+.smh b small{font:600 11px var(--body);color:var(--muted)}
+.smh b.good small{color:var(--good)}
+
+.sbars{display:flex;flex-direction:column;gap:8px}
+.sbar{display:grid;grid-template-columns:92px 1fr 34px 46px;gap:8px;align-items:center;font-size:13px;border-radius:6px}
+.sbar:focus-visible{outline:2px solid var(--accent)}
+.strack{position:relative;height:14px;background:var(--track);border-radius:4px}
+.strack i{display:block;height:100%;background:var(--accent);border-radius:0 4px 4px 0}
+.strack b{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink);opacity:.55}
+.sbar .num{text-align:right;font-weight:600}
+.sbar .sd{font-weight:600;color:var(--muted)}
+.sbar .sd.good{color:var(--good)}
+.tip{position:fixed;z-index:9;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 6px 20px rgba(0,0,0,.18);font-size:12px;pointer-events:none;min-width:120px}
+.tip .th{color:var(--muted);font-weight:600;margin-bottom:4px}
+.tip .tr{display:flex;gap:8px;align-items:baseline}
+.tip .tr b{font-size:14px;font-variant-numeric:tabular-nums}
+.tip .tr span{color:var(--muted)}
+.tbl summary{font-size:13px}
+.tblw{overflow-x:auto;margin-top:8px}
+.tbl table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+@media (max-width:380px){.smult{grid-template-columns:repeat(2,1fr)}.sbar{grid-template-columns:80px 1fr 30px 42px}}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -221,6 +268,7 @@ details summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent
 </nav>
 <div id="rest" class="rest" hidden role="timer" aria-live="polite"><div class="grow"><span id="rest-label" class="rest-l"></span><span id="rest-time" class="rest-t">0:00</span></div><button id="rest-add" class="rest-b" aria-label="30 Sekunden mehr Pause">+30 s</button><button id="rest-stop" class="rest-b" aria-label="Pause beenden">Weiter</button></div>
 <div id="toast" class="toast" hidden></div>
+<div id="tip" class="tip" role="status" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
 <input type="file" id="import-in" accept="application/json,.json" hidden>
 
@@ -530,6 +578,7 @@ document.addEventListener("focusout",()=>setTimeout(()=>{if(pending&&!/INPUT|SEL
 let toastT;function flash(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 
 function render(){
+  for(const k in CH)delete CH[k];if($("#tip"))$("#tip").hidden=true;
   const isToday=S.sel===today();
   $("#datelabel").textContent=isToday?"Heute":dlabel(S.sel);
   $("#datelabel").className=isToday?"today":"";
@@ -866,6 +915,114 @@ function weekVolume(d){
     VGROUPS.forEach(([g,ms])=>{const f=ms.some(m=>e.mus.includes(m))?1:ms.some(m=>e.mus2.includes(m))?0.5:0;vol[g]+=f*n})}));
   return vol;
 }
+
+// ---------- Monats- & Jahresübersicht ----------
+const MONTHS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const CH={};let chN=0;
+function niceTicks(lo,hi,n){const span=Math.max(hi-lo,1e-6),raw=span/(n||3),p=Math.pow(10,Math.floor(Math.log10(raw)));const st=[1,2,2.5,5,10].map(m=>m*p).find(m=>m>=raw);
+  const a=Math.floor(lo/st)*st,b=Math.ceil(hi/st)*st,t=[];for(let v=a;v<=b+st/2;v+=st)t.push(Math.round(v*100)/100);return t}
+// slots: [{lab,y,y2,tip:[[name,wert]]}] · y = Einzelwerte (Punkte), y2 = Linie
+function lineChart(slots,o){
+  const id="ch"+(++chN),mini=!!o.mini,W=mini?120:340,H=o.h||(mini?54:170),L=mini?4:38,R=mini?6:16,T=mini?8:12,B=mini?6:22,n=slots.length;
+  const lk=o.lineKey||"y2",vals=slots.flatMap(x=>[x.y,x[lk]]).filter(v=>v!=null);
+  if(!vals.length)return`<p class="sub">${o.empty}</p>`;
+  let lo=Math.min(...vals,...(o.ref!=null?[o.ref]:[])),hi=Math.max(...vals,...(o.ref!=null?[o.ref]:[]));const ms=o.minSpan||2;
+  if(hi-lo<ms){const m=(hi+lo)/2;lo=m-ms/2;hi=m+ms/2}
+  const ticks=niceTicks(lo,hi,mini?2:3);lo=ticks[0];hi=ticks[ticks.length-1];
+  const x=i=>L+(n<=1?0.5:i/(n-1))*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  let d="",pen=false;slots.forEach((s2,i)=>{const v=s2[lk];if(v==null){if(!o.connect)pen=false;return}d+=(pen?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1);pen=true});
+  let li=-1;for(let i=n-1;i>=0;i--)if(slots[i][lk]!=null){li=i;break}
+  CH[id]={slots,xs:slots.map((_,i)=>x(i)),W,T,B,H,idx:li};
+  const dec=o.dec??1,lab=v=>fmt(v,dec);
+  return`<div class="chwrap"><svg class="ch${mini?" mini":""}" id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}" tabindex="0">
+    ${mini?"":ticks.map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${fmt(v,v%1?1:0)}</text>`).join("")}
+    ${o.ref!=null?`<line x1="${L}" x2="${W-R}" y1="${y(o.ref)}" y2="${y(o.ref)}" class="ref"/>`:""}
+    ${mini?"":(o.xl||[]).map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?"start":i===n-1?"end":"middle"}">${esc(slots[i].lab)}</text>`).join("")}
+    ${o.dots?slots.map((s2,i)=>s2.y!=null?`<circle cx="${x(i).toFixed(1)}" cy="${y(s2.y).toFixed(1)}" r="3" class="dot"/>`:"").join(""):""}
+    <path d="${d}" class="ln"/>
+    ${li>=0?`<circle cx="${x(li)}" cy="${y(slots[li][lk])}" r="${mini?3.5:4.5}" class="end"/>${mini?"":(()=>{const ex=x(li),ey=y(slots[li][lk]),right=ex<W-R-70;let pi=-1;for(let k=li-1;k>=0;k--)if(slots[k][lk]!=null){pi=k;break}const below=!right&&pi>=0&&slots[pi][lk]>slots[li][lk];return`<text x="${right?ex+9:ex-9}" y="${right?ey+4:below?ey+18:ey-10}" text-anchor="${right?"start":"end"}" class="endlab">${lab(slots[li][lk])}${o.unit?" "+o.unit:""}</text>`})()}`:""}
+    <line class="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" visibility="hidden"/>
+    <rect class="hit" x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
+  </svg></div>`;
+}
+function e1rmSet(x){return x&&x[0]&&x[1]?x[0]*(1+(x[1]+(x[2]!=null?x[2]:0))/30):0}
+// Kraft-Index je Muskelgruppe: bestes geschätztes 1-Wdh-Maximum im Zeitraum ÷ erster Wert der Übung × 100, gemittelt über die Hauptübungen der Gruppe
+function strengthIdx(a,b){
+  const ss=allSessions().filter(x=>x.ex),base={},best={};
+  ss.forEach(x=>Object.keys(x.ex).forEach(id=>{const v=Math.max(0,...x.ex[id].map(e1rmSet));if(v>0&&base[id]==null)base[id]=v;if(v>0&&x.date>=a&&x.date<=b&&(!best[id]||v>best[id]))best[id]=v}));
+  const out={};VGROUPS.forEach(([g,ms])=>{const v=Object.keys(best).filter(id=>LIB[id]&&LIB[id].mus&&LIB[id].mus.some(m=>ms.includes(m))).map(id=>best[id]/base[id]*100);out[g]=v.length?v.reduce((p,c)=>p+c,0)/v.length:null});
+  return out;
+}
+const meanOf=a=>{const v=a.filter(x=>x!=null);return v.length?v.reduce((p,c)=>p+c,0)/v.length:null};
+function waists(){const w=[];Object.keys(S.docs).filter(k=>k.startsWith("log-")).forEach(k=>{const d=S.docs[k].days||{};Object.keys(d).forEach(x=>{if(d[x].waist!=null)w.push([x,d[x].waist])})});return w.sort((a,b)=>a[0]<b[0]?-1:1)}
+const monthEnd=m=>{const [Y,M]=m.split("-").map(Number);return m+"-"+pad(new Date(Y,M,0).getDate())};
+const shiftMonth=(m,k)=>{const [Y,M]=m.split("-").map(Number);const d=new Date(Y,M-1+k,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)};
+function deltaTile(v,unit,goodWhenDown,dec,label){
+  const cls=v==null?"":(goodWhenDown?v<0:v>0)?"good":Math.abs(v)<0.05?"":"warn";
+  return`<div class="tile"><div class="v ${cls}">${v==null?"–":(v>0?"+":"")+fmt(v,dec)}${v==null?"":`<small> ${unit}</small>`}</div><div class="l">${label}</div></div>`;
+}
+function overviewCard(){
+  const mode=S.ovMode||"m",cm=S.ovMonth||today().slice(0,7),cy=S.ovYear||+today().slice(0,4);
+  const ws=weights(),wa=waists();let head,body,tiles,table;
+  if(mode==="m"){
+    const a=cm+"-01",b=monthEnd(cm),nd=+b.slice(8),lim=today();
+    const slots=[];for(let i=1;i<=nd;i++){const d=cm+"-"+pad(i),day=dayObj(d);const av=d<=lim?avgTo(ws,d):null;
+      slots.push({lab:i+".",y:day.weight??null,y2:av,w:day.waist??null,tip:[["Datum",dlabel(d)],["Gewicht",day.weight!=null?fmt(day.weight,1)+" kg":"–"],["7-Tage-Schnitt",av!=null?fmt(av,1)+" kg":"–"]]})}
+    const wsl=slots.map(x=>({lab:x.lab,y:x.w,y2:x.w,tip:[["Datum",x.tip[0][1]],["Bauchumfang",x.w!=null?fmt(x.w,1)+" cm":"–"]]}));
+    const av=slots.map(x=>x.y2).filter(v=>v!=null),wv=wsl.map(x=>x.y).filter(v=>v!=null);
+    const cur=strengthIdx(a,b),prev=strengthIdx(shiftMonth(cm,-1)+"-01",monthEnd(shiftMonth(cm,-1)));
+    const ci=meanOf(Object.values(cur)),pi=meanOf(Object.values(prev));
+    head=new Date(cm+"-15T12:00").toLocaleDateString("de-DE",{month:"long",year:"numeric"});
+    tiles=deltaTile(av.length>1?av[av.length-1]-av[0]:null,"kg",true,1,"Gewicht")+deltaTile(wv.length>1?wv[wv.length-1]-wv[0]:null,"cm",true,1,"Bauch")+deltaTile(ci!=null&&pi!=null?(ci/pi-1)*100:null,"%",false,0,"Kraft vs. Vormonat");
+    body=`<h3 class="ovh">Gewicht</h3>${lineChart(slots,{dots:true,unit:"kg",aria:"Gewicht im "+head,empty:"Noch keine Gewichtswerte in diesem Monat.",xl:[0,14,nd-1]})}<span class="cap">Punkte = Tageswerte · Linie = 7-Tage-Schnitt</span>
+      <h3 class="ovh">Bauchumfang</h3>${lineChart(wsl,{dots:true,connect:true,lineKey:"y",unit:"cm",aria:"Bauchumfang im "+head,empty:"Noch kein Bauchumfang in diesem Monat – einmal pro Woche messen.",xl:[0,14,nd-1]})}
+      <h3 class="ovh">Kraft je Muskelgruppe <small>Index, Start = 100</small></h3>${strengthBars(cur,prev,"Vormonat")}`;
+    table=[["Datum","Gewicht","Schnitt","Bauch"],...slots.map((x,i)=>[cm.slice(5)+"-"+pad(i+1),x.y,x.y2,x.w]).filter(r=>r[1]!=null||r[3]!=null).map(r=>[dlabel(cm+"-"+r[0].slice(3),{day:"numeric",month:"short"}),r[1]!=null?fmt(r[1],1):"–",r[2]!=null?fmt(r[2],1):"–",r[3]!=null?fmt(r[3],1):"–"])];
+  }else{
+    const months=MONTHS.map((m,i)=>{const k=cy+"-"+pad(i+1),a=k+"-01",b=monthEnd(k);
+      return{k,lab:m,w:meanOf(ws.filter(x=>x[0]>=a&&x[0]<=b).map(x=>x[1])),c:meanOf(wa.filter(x=>x[0]>=a&&x[0]<=b).map(x=>x[1])),s:strengthIdx(a,b)}});
+    const wsl=months.map(m=>({lab:m.lab,y:m.w,y2:m.w,tip:[["Monat",m.lab+" "+cy],["Ø Gewicht",m.w!=null?fmt(m.w,1)+" kg":"–"]]}));
+    const csl=months.map(m=>({lab:m.lab,y:m.c,y2:m.c,tip:[["Monat",m.lab+" "+cy],["Ø Bauchumfang",m.c!=null?fmt(m.c,1)+" cm":"–"]]}));
+    const fv=a=>a.filter(v=>v!=null);const wv=fv(months.map(m=>m.w)),cv=fv(months.map(m=>m.c)),iv=fv(months.map(m=>meanOf(Object.values(m.s))));
+    head=String(cy);
+    tiles=deltaTile(wv.length>1?wv[wv.length-1]-wv[0]:null,"kg",true,1,"Gewicht")+deltaTile(cv.length>1?cv[cv.length-1]-cv[0]:null,"cm",true,1,"Bauch")+deltaTile(iv.length>1?(iv[iv.length-1]/iv[0]-1)*100:null,"%",false,0,"Kraft im Jahr");
+    body=`<h3 class="ovh">Gewicht <small>Monatsschnitt</small></h3>${lineChart(wsl,{dots:true,connect:true,unit:"kg",aria:"Gewicht "+cy,empty:"Noch keine Gewichtswerte in diesem Jahr.",xl:[0,3,6,9,11]})}
+      <h3 class="ovh">Bauchumfang <small>Monatsschnitt</small></h3>${lineChart(csl,{dots:true,connect:true,unit:"cm",aria:"Bauchumfang "+cy,empty:"Noch kein Bauchumfang in diesem Jahr.",xl:[0,3,6,9,11]})}
+      <h3 class="ovh">Kraft je Muskelgruppe <small>Index, Start = 100</small></h3>
+      <div class="smult">${VGROUPS.map(([g])=>{const sl=months.map(m=>({lab:m.lab,y:m.s[g],y2:m.s[g],tip:[["Monat",m.lab+" "+cy],[g,m.s[g]!=null?fmt(m.s[g],0):"–"]]}));
+        const v=fv(sl.map(x=>x.y2));return`<div class="sm"><div class="smh"><span>${g}</span><b class="${v.length>1&&v[v.length-1]>v[0]?"good":""}">${v.length?fmt(v[v.length-1],0):"–"}${v.length>1?` <small>${(v[v.length-1]>=v[0]?"+":"")+fmt((v[v.length-1]/v[0]-1)*100,0)} %</small>`:""}</b></div>${lineChart(sl,{mini:true,connect:true,dec:0,ref:100,minSpan:10,aria:"Kraft-Index "+g+" "+cy,empty:"–"})}</div>`}).join("")}</div>`;
+    table=[["Monat","Ø Gewicht","Ø Bauch","Ø Kraft-Index"],...months.filter(m=>m.w!=null||m.c!=null||meanOf(Object.values(m.s))!=null).map(m=>[m.lab,m.w!=null?fmt(m.w,1):"–",m.c!=null?fmt(m.c,1):"–",(()=>{const v=meanOf(Object.values(m.s));return v!=null?fmt(v,0):"–"})()])];
+  }
+  return`<section class="card stack ov">
+    <div class="row"><div class="seg ovseg" role="group" aria-label="Zeitraum"><button data-act="ovmode" data-v="m" aria-pressed="${mode==="m"}">Monat</button><button data-act="ovmode" data-v="y" aria-pressed="${mode==="y"}">Jahr</button></div>
+      <div class="ovnav"><button data-act="ovnav" data-v="-1" aria-label="Zurück">‹</button><span>${head}</span><button data-act="ovnav" data-v="1" aria-label="Weiter">›</button></div></div>
+    <div class="tiles">${tiles}</div>
+    ${body}
+    <details class="tbl"><summary>Werte als Tabelle</summary>${table.length>1?`<div class="tblw"><table><thead><tr>${table[0].map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${table.slice(1).map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`:`<p class="sub">Noch keine Werte in diesem Zeitraum.</p>`}</details>
+  </section>`;
+}
+function strengthBars(cur,prev,prevLabel){
+  const rows=VGROUPS.map(([g])=>[g,cur[g],prev[g]]);if(!rows.some(r=>r[1]!=null))return`<p class="sub">Noch keine Krafteinheiten in diesem Monat.</p>`;
+  const max=Math.max(110,...rows.map(r=>r[1]||0));
+  return`<div class="sbars">${rows.map(([g,v,p])=>{const dl=v!=null&&p!=null?(v/p-1)*100:null;
+    return`<div class="sbar" tabindex="0" data-tip="${esc(g)}|Index ${v!=null?fmt(v,0):"–"}|${prevLabel}: ${p!=null?fmt(p,0):"–"}"><span>${g}</span><div class="strack"><i style="width:${v!=null?v/max*100:0}%"></i><b style="left:${100/max*100}%"></b></div><span class="num">${v!=null?fmt(v,0):"–"}</span><span class="num sd ${dl!=null&&dl>0?"good":""}">${dl!=null?(dl>=0?"+":"")+fmt(dl,0)+" %":""}</span></div>`}).join("")}</div>
+    <span class="cap">Strich = 100 (dein Startwert). Berechnet aus dem besten geschätzten Maximalgewicht je Übung – mit deinen Reserve-Angaben wird es genauer.</span>`;
+}
+// Tooltip für Diagramme (Fadenkreuz) und Balken
+function showTip(px,py,rows){const t=$("#tip");t.replaceChildren();rows.forEach(([k,v],i)=>{const r=document.createElement("div");r.className=i?"tr":"th";const b=document.createElement("b");b.textContent=v;const sp=document.createElement("span");sp.textContent=k;if(i){r.append(b,sp)}else{sp.textContent=v||k;r.append(sp)}t.append(r)});
+  t.hidden=false;const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(8,Math.min(innerWidth-w-8,px-w/2))+"px";t.style.top=Math.max(8,py-h-14)+"px"}
+function hideTip(){$("#tip").hidden=true;document.querySelectorAll(".ch .xh").forEach(l=>l.setAttribute("visibility","hidden"))}
+function chartAt(svg,i,dir){const c=CH[svg.id];if(!c)return;i=Math.max(0,Math.min(c.slots.length-1,i));
+  const has=k=>c.slots[k]&&(c.slots[k].y!=null||c.slots[k].y2!=null);if(!has(i)){let j=i;while(j>=0&&j<c.slots.length&&!has(j))j+=dir||-1;if(j<0||j>=c.slots.length)return;i=j}c.idx=i;const xh=svg.querySelector(".xh");xh.setAttribute("x1",c.xs[i]);xh.setAttribute("x2",c.xs[i]);xh.setAttribute("visibility","visible");
+  const r=svg.getBoundingClientRect();showTip(r.left+c.xs[i]/c.W*r.width,r.top+c.T/c.H*r.height,c.slots[i].tip||[])}
+document.addEventListener("pointermove",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg&&e.target.classList.contains("hit")){const c=CH[svg.id];const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)/r.width*c.W;let bi=-1,bd=1e9;c.xs.forEach((x,i)=>{const s2=c.slots[i];if(s2.y==null&&s2.y2==null)return;const dd=Math.abs(x-px);if(dd<bd){bd=dd;bi=i}});if(bi>=0)chartAt(svg,bi);return}
+  const sb=e.target.closest&&e.target.closest("[data-tip]");if(sb){const r=sb.getBoundingClientRect();const [a,...rest]=sb.dataset.tip.split("|");showTip(r.left+r.width/2,r.top,[["",a],...rest.map(x=>{const i=x.indexOf(":");return i>0?[x.slice(0,i),x.slice(i+1).trim()]:["",x]})]);return}
+  if(!$("#tip").hidden)hideTip()});
+document.addEventListener("focusin",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg){const c=CH[svg.id];if(c)chartAt(svg,c.idx>=0?c.idx:0)}});
+document.addEventListener("keydown",e=>{const svg=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("svg.ch");if(!svg)return;const c=CH[svg.id];if(e.key==="ArrowLeft"){chartAt(svg,c.idx-1,-1);e.preventDefault()}else if(e.key==="ArrowRight"){chartAt(svg,c.idx+1,1);e.preventDefault()}else if(e.key==="Escape")hideTip()});
+document.addEventListener("focusout",()=>setTimeout(()=>{if(!document.activeElement||!document.activeElement.closest("svg.ch"))hideTip()},0));
+document.addEventListener("scroll",hideTip,{passive:true});
+
 function volumeCard(){
   const vol=weekVolume(S.sel),max=20;
   return`<section class="card stack"><h2>Sätze pro Muskel · diese Woche</h2>
@@ -996,6 +1153,7 @@ function viewProg(){
     <button class="btn" data-act="waist" style="align-self:flex-end">Speichern</button></div>
     <span class="sub">${waists.length?`Zuletzt ${fmt(waists[waists.length-1][1],1)} cm${waists.length>1?` · seit ${dlabel(waists[0][0],{day:"numeric",month:"short"})}: ${fmt(waists[waists.length-1][1]-waists[0][1],1)} cm`:""}`:"Einmal pro Woche messen. Sinkt der Bauch, während das Gewicht gleich bleibt, baust du Fett ab und Muskeln auf."}</span>
   </section>
+  ${overviewCard()}
   ${volumeCard()}
   <section class="card"><h2>Kraft</h2>
     ${strength.length?`<div class="list">${strength.map(x=>`<div class="item"><div class="grow">${esc(x.e.n.replace(/ \(.*\)/,""))}<div class="sub">${x.n} Einheiten</div></div><span class="num">${x.e.time?x.first+" → "+x.last+" s":fkg(x.first)+" → <b>"+fkg(x.last)+" kg</b>"}</span></div>`).join("")}</div>`
@@ -1150,6 +1308,8 @@ $("#view").addEventListener("click",e=>{
   else if(a==="check"){const d=dayObj(S.sel,true);d.checks=d.checks||{};d.checks[v]=!d.checks[v];touch(mk);b.setAttribute("aria-pressed",d.checks[v])}
   else if(a==="weight"){const w=num($("#w-in").value);if(w==null||w<30||w>300){flash("Gewicht in kg eingeben, z. B. 84,2");return}
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
+  else if(a==="ovmode"){S.ovMode=v;render()}
+  else if(a==="ovnav"){const k=+v;if((S.ovMode||"m")==="m"){const m=shiftMonth(S.ovMonth||today().slice(0,7),k);if(m<=today().slice(0,7)){S.ovMonth=m;render()}}else{const y=(S.ovYear||+today().slice(0,4))+k;if(y<=+today().slice(0,4)){S.ovYear=y;render()}}}
   else if(a==="figmode"){FIGMODE=v;lsSet("formkurve-fig",v);render()}
   else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
   else if(a==="vid-save"){const u=(document.getElementById("vid-"+v).value||"").trim();
