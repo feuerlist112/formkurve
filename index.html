@@ -138,6 +138,15 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .supp .btn{align-self:flex-start}
 .warnbox{border-color:var(--warn)}
 .warnbox h2{color:var(--warn)}
+.rir{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:2px 0 4px 34px;font-size:12px;color:var(--muted)}
+.rirb{display:flex;gap:4px}
+.rirb button{min-width:38px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:600 13px var(--body);cursor:pointer}
+.rirb button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.advice{margin:0;font-size:13px;font-weight:600;color:var(--ink);background:var(--bg);border-radius:10px;padding:9px 12px}
+.advice.up{color:var(--good);background:var(--good-soft)}
+.advice.down{color:var(--warn)}
+@keyframes adj{0%{background:var(--accent-soft);border-color:var(--accent)}100%{}}
+.set input.adj{animation:adj 1.6s ease-out}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -483,13 +492,44 @@ function viewToday(){
 function lastFor(id){const ss=allSessions();for(let i=ss.length-1;i>=0;i--){const s=ss[i].ex&&ss[i].ex[id];if(s&&s.length)return{date:ss[i].date,sets:s}}return null}
 function suggest(ex){
   const l=lastFor(ex.id);
-  if(!l)return{kg:ex.time?null:ex.start,why:ex.time?"Erstes Mal: so lange, wie du sauber halten kannst.":"Erstes Mal: Startwert anpassen, bis 2–3 Wdh Reserve bleiben."};
+  if(!l)return{kg:ex.time?null:ex.start,why:ex.time?"Erstes Mal: so lange, wie du sauber halten kannst.":"Erstes Mal: leicht starten. Nach jedem Satz passt die App das Gewicht an."};
   if(ex.time){const best=Math.max(...l.sets.map(s=>s[1]||0));const all=l.sets.every(s=>(s[1]||0)>=ex.hi);
     return{kg:null,last:l,target:all?best+5:best,up:all,why:all?"Alle Sätze ≥ "+ex.hi+" s → 5 s länger":"Ziel: "+ex.hi+" s in allen Sätzen"}}
   const kg=Math.max(...l.sets.map(s=>s[0]||0));
+  const withR=l.sets.filter(x=>x[2]!=null&&x[0]&&x[1]);
+  if(withR.length){
+    const best=Math.max(...withR.map(x=>e1rm(x[0],x[1],x[2])));
+    const nk=clampKg(ex,kg,roundKg(ex,kgFor(ex,best,0))),d=Math.round((nk-kg)*100)/100;
+    return{kg:nk,last:l,up:d>0,why:d>0?"Letztes Mal war noch Reserve übrig → +"+fkg(d)+" kg":d<0?"Letztes Mal zu schwer → "+fkg(nk)+" kg ("+fkg(d)+" kg)":"Gewicht passt, Ziel "+ex.hi+" Wdh in jedem Satz"};
+  }
   const all=l.sets.length>=ex.sets&&l.sets.every(s=>(s[1]||0)>=ex.hi);
   return all?{kg:kg+ex.inc,last:l,up:true,why:"Alle Sätze mit "+ex.hi+" Wdh → +"+fkg(ex.inc)+" kg"}
             :{kg,last:l,why:"Gleiches Gewicht, Ziel "+ex.hi+" Wdh in jedem Satz"};
+}
+// ----- Automatische Gewichtssteuerung (Reserve/RIR-basiert) -----
+const targetRIR=()=>learning()?2.5:1.5;
+const e1rm=(kg,reps,rir)=>kg*(1+(reps+rir)/30);                 // geschätztes 1-Wdh-Maximum (Epley)
+const kgFor=(ex,e1,idx)=>e1/(1+((ex.lo+ex.hi)/2+targetRIR()+(idx>0?1:0))/30); // Ziel: Mitte der Wdh-Spanne, spätere Sätze mit Ermüdung
+function roundKg(ex,x){const st=ex.inc||2.5;return Math.max(ex.bar?20:st,Math.round(Math.round(x/st)*st*100)/100)}
+function clampKg(ex,kg,nk){const st=ex.inc||2.5,maxD=Math.max(st,Math.floor(kg*0.15/st)*st);return Math.round(Math.min(kg+maxD,Math.max(kg-maxD,nk))*100)/100}
+function setAdvice(ex,st){
+  const kg=num(st.kg),reps=num(st.reps);if(ex.time||kg==null||reps==null)return null;
+  let rir=st.rir;
+  if(rir==null){if(reps<ex.lo)rir=0;else if(reps>ex.hi+2)rir=targetRIR();else return{kg,d:0,why:"Wie viele Wdh wären noch gegangen? Dann passe ich das Gewicht genau an."}}
+  const nk=clampKg(ex,kg,roundKg(ex,kgFor(ex,e1rm(kg,reps,rir),1))),d=Math.round((nk-kg)*100)/100;
+  const res=rir>=4?"4+ Wdh":rir===1?"1 Wdh":rir+" Wdh";
+  return{kg:nk,d,why:d>0?`Nächster Satz: ${fkg(nk)} kg (+${fkg(d)}) – ${reps} Wdh mit ${res} Reserve war zu leicht`:
+    d<0?`Nächster Satz: ${fkg(nk)} kg (${fkg(d)}) – damit du ${ex.lo}–${ex.hi} Wdh sauber schaffst`:`Nächster Satz: ${fkg(kg)} kg – passt genau`};
+}
+function applyAdvice(art,ex,i){
+  const sets=drafts[S.trainPlan].sets[ex.id],a=setAdvice(ex,sets[i]);const el=art.querySelector("[data-advice]");
+  if(!a){if(el)el.hidden=true;return null}
+  if(a.d!==0)for(let j=i+1;j<sets.length;j++){if(sets[j].done)continue;sets[j].kg=fkg(a.kg);const inp=art.querySelector(`.set[data-i="${j}"] [data-f="kg"]`);if(inp){inp.value=sets[j].kg;inp.classList.remove("adj");void inp.offsetWidth;inp.classList.add("adj")}}
+  saveDrafts();
+  const next=sets.findIndex((x,j)=>j>i&&!x.done);
+  if(el){el.hidden=false;el.className="advice"+(a.d>0?" up":a.d<0?" down":"");el.textContent=next<0?a.why.replace("Nächster Satz","Nächstes Mal eher"):a.why}
+  const pl=art.querySelector("[data-plates]");if(pl&&next>=0)pl.innerHTML=platesHtml(sets[next].kg);
+  return a;
 }
 function draftFor(p){
   if(!drafts[p])drafts[p]={sets:{}};let ch=false;
@@ -573,7 +613,9 @@ function viewTrain(){
         <span class="no">${i+1}</span>
         ${ex.time?"":`<input id="kg-${p}-${ex.id}-${i}" aria-label="Satz ${i+1} kg" inputmode="decimal" data-f="kg" value="${esc(st.kg)}">`}
         <input id="r-${p}-${ex.id}-${i}" aria-label="Satz ${i+1} ${ex.time?"Sekunden":"Wiederholungen"}" inputmode="numeric" data-f="reps" placeholder="${ex.time&&s.target?s.target:ex.lo+"–"+ex.hi}" value="${esc(st.reps)}">
-        <button class="tick" data-act="tick" aria-label="Satz ${i+1} erledigt" aria-pressed="${st.done}">✓</button></div>`).join("")}
+        <button class="tick" data-act="tick" aria-label="Satz ${i+1} erledigt" aria-pressed="${st.done}">✓</button></div>
+        ${ex.time?"":`<div class="rir" data-i="${i}" ${st.done?"":"hidden"}><span>Wie viele Wdh wären noch gegangen?</span><div class="rirb">${[0,1,2,3,4].map(r=>`<button data-act="rir" data-v="${i}|${r}" aria-pressed="${st.rir===r}">${r===4?"4+":r}</button>`).join("")}</div></div>`}`).join("")}
+      <p class="advice" data-advice hidden></p>
       ${ex.bar?`<div class="plates" data-plates>${platesHtml(sets[0]&&sets[0].kg)}</div>`:""}
     </article>`}).join("")}
   <button class="btn" data-act="save-session">Training speichern (${dlabel(S.sel,{day:"numeric",month:"short"})})</button>
@@ -615,7 +657,7 @@ function bindTrain(){
 }
 function saveSession(){
   const p=S.trainPlan,d=drafts[p];const ex={};let n=0;
-  resolve(p).forEach(e=>{const sets=(d.sets[e.id]||[]).filter(s=>s.done&&num(s.reps)!=null).map(s=>[e.time?null:num(s.kg),num(s.reps)]);if(sets.length){ex[e.id]=sets;n+=sets.length}});
+  resolve(p).forEach(e=>{const sets=(d.sets[e.id]||[]).filter(s=>s.done&&num(s.reps)!=null).map(s=>s.rir!=null&&!e.time?[num(s.kg),num(s.reps),s.rir]:[e.time?null:num(s.kg),num(s.reps)]);if(sets.length){ex[e.id]=sets;n+=sets.length}});
   if(!n){flash("Hake mindestens einen Satz ab");return}
   const id="wo-"+S.sel.slice(0,7);const doc=S.docs[id]||(S.docs[id]={sessions:[]});doc.sessions=doc.sessions||[];
   doc.sessions.push({date:S.sel,plan:p,t:Date.now(),ex});touch(id);
@@ -839,7 +881,7 @@ function viewKnow(){
       ${li("Ganzkörper, 3× pro Woche.","Jeder Muskel wird so 2× pro Woche trainiert. Das bringt mehr Wachstum als 1× pro Woche.","Schoenfeld et al. 2016")}
       ${li("Etwa 10–20 harte Sätze pro Muskel und Woche.","Mehr Sätze bringen mehr Muskel, bis etwa 20. Als Einsteiger reichen 10. Die App zeigt unter Fortschritt, wo du stehst.","Schoenfeld et al. 2017")}
       ${li("Nah ans Muskelversagen.","Stopp 1–2 Wiederholungen vorher. Nur in den ersten 6 Einheiten bewusst 2–3 Wiederholungen Reserve lassen, um die Technik zu lernen.","Robinson et al. 2024")}
-      ${li("Ständig steigern.","Schaffst du in allen Sätzen die obere Wiederholungszahl, kommt mehr Gewicht drauf. Das ist der wichtigste Wachstumsreiz.","")}
+      ${li("Ständig steigern – automatisch.","Nach jedem Satz gibst du an, wie viele Wiederholungen noch gegangen wären. Daraus schätzt die App deine aktuelle Kraft und stellt das Gewicht für den nächsten Satz und das nächste Training so ein, dass du in der Ziel-Spanne knapp vor dem Versagen landest. Das ist der wichtigste Wachstumsreiz.","Helms et al. 2016 (RIR-Skala)")}
       ${li("Lange Pausen bei Grundübungen.","2–3 Minuten bei Kniebeuge, Bankdrücken und Co., 90 Sekunden bei kleinen Übungen. Der Timer startet automatisch beim Abhaken.","Schoenfeld et al. 2016")}
       ${li("Voller Bewegungsumfang.","Gerade die gedehnte Position, z. B. tief in der Kniebeuge, regt das Wachstum stark an.","Pedrosa et al. 2022")}
     </ul>
@@ -924,8 +966,13 @@ $("#view").addEventListener("click",e=>{
     touch("settings");S.swapOpen=null;render();flash(LIB[id].n.replace(/ \(.*\)/,"")+" eingeplant")}
   else if(a==="tick"){const art=b.closest(".ex"),row=b.closest(".set"),ex=resolve(S.trainPlan).find(x=>x.id===art.dataset.ex);const st=drafts[S.trainPlan].sets[ex.id][+row.dataset.i];
     st.done=!st.done;if(st.done&&!st.reps){const s=suggest(ex);st.reps=String(ex.time?(s.target||ex.lo):ex.lo);row.querySelector('[data-f="reps"]').value=st.reps}
+    if(!st.done)delete st.rir;
     saveDrafts();row.classList.toggle("done",st.done);b.setAttribute("aria-pressed",st.done);
-    if(st.done)startRest(restFor(ex),ex.n.replace(/ \(.*\)/,"")+" · Satz "+(+row.dataset.i+1)+" geschafft");}
+    const rr=art.querySelector(`.rir[data-i="${row.dataset.i}"]`);if(rr){rr.hidden=!st.done;rr.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"))}
+    if(st.done){const adv=applyAdvice(art,ex,+row.dataset.i);startRest(restFor(ex),adv&&adv.d!==0?adv.why.split(" – ")[0]:ex.n.replace(/ \(.*\)/,"")+" · Satz "+(+row.dataset.i+1)+" geschafft")}}
+  else if(a==="rir"){const art=b.closest(".ex"),ex=resolve(S.trainPlan).find(x=>x.id===art.dataset.ex);const [i,r]=v.split("|").map(Number);
+    const st=drafts[S.trainPlan].sets[ex.id][i];st.rir=r;b.parentElement.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+    const adv=applyAdvice(art,ex,i);if(adv&&T.end&&adv.d!==0){T.label=adv.why.split(" – ")[0];if(T.iv)$("#rest-label").textContent=T.label}}
   else if(a==="save-session")saveSession();
   else if(a==="save-cardio")saveCardio();
   else if(a==="tempo"){const st=S.docs.settings||(S.docs.settings={});st.tempo=+v;S.estRes=null;touch("settings");render();flash("Tempo: "+fmt(+v,1)+" % pro Woche")}
