@@ -38,7 +38,7 @@
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;-webkit-tap-highlight-color:transparent}
-.wrap{max-width:560px;margin:0 auto;padding-block:0 104px}
+.wrap{max-width:560px;margin:0 auto;padding-block:0 170px}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding-block:12px 10px;border-bottom:1px solid var(--line);margin-bottom:16px}
 .brand{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.02em;text-transform:uppercase;margin-right:auto;line-height:1}
 .brand small{display:block;font-family:var(--body);font-size:11px;font-weight:500;letter-spacing:.04em;text-transform:none;color:var(--muted);margin-top:3px}
@@ -80,6 +80,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .check .sub{margin-left:auto}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--track);border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;border-radius:9px;padding:9px;font:600 14px var(--body);background:transparent;color:var(--muted);cursor:pointer}
+.seg button small{font-weight:500;opacity:.8}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .ex{display:flex;flex-direction:column;gap:10px}
 .ex header{display:flex;align-items:baseline;gap:10px;justify-content:space-between}
@@ -114,6 +115,29 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .cap{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
 .cap b{color:var(--ink);font-weight:600}
 .photo{margin-top:auto}
+.rest{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom,0px));z-index:6;background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:10px 12px 10px 16px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:540px;margin:0 auto}
+.rest.over{background:var(--good)}
+.rest .grow{flex:1;min-width:0;display:flex;flex-direction:column}
+.rest-l{font-size:12px;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rest-t{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.rest-b{border:1px solid currentColor;background:transparent;color:inherit;border-radius:10px;padding:9px 12px;font:600 14px var(--body);cursor:pointer}
+.vol{display:flex;flex-direction:column;gap:8px}
+.vrow{display:grid;grid-template-columns:96px 1fr 34px;gap:10px;align-items:center;font-size:13px}
+.vrow .num{text-align:right;font-weight:600}
+.vbar{position:relative;height:10px;border-radius:99px;background:var(--track)}
+.vbar i{display:block;height:100%;border-radius:inherit;background:var(--warn)}
+.vbar.mid i{background:var(--accent)}
+.vbar.ok i{background:var(--good)}
+.vbar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.5}
+.know p{margin:0}
+.know ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px}
+.know li{line-height:1.45}
+.src{font-size:11px;color:var(--muted);white-space:nowrap}
+.supp{display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--line)}
+.supp:first-of-type{border-top:0;padding-top:0}
+.supp .btn{align-self:flex-start}
+.warnbox{border-color:var(--warn)}
+.warnbox h2{color:var(--warn)}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -128,11 +152,11 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .chart{width:100%;height:auto;display:block}
 .chart text{fill:var(--muted);font:500 10px var(--body)}
 details summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,1fr)}
 .tabs button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font:600 11px var(--body);cursor:pointer;border-radius:10px}
 .tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tabs button[aria-current="page"]{color:var(--accent)}
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:7;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:7;max-width:calc(100% - 32px);text-align:center}
 .status{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
 .status.err{color:var(--warn)}
 @media (max-width:380px){.big{font-size:44px}.datebar span{min-width:84px;font-size:13px}.tiles .v{font-size:24px}}
@@ -158,7 +182,9 @@ details summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent
   <button data-tab="train"><svg viewBox="0 0 24 24"><path d="M3 12h18M6 8v8M9 6v12M15 6v12M18 8v8"/></svg>Training</button>
   <button data-tab="food"><svg viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 4 0V3M9 11v10M17 21V3c-2 1-3 4-3 8h3"/></svg>Essen</button>
   <button data-tab="prog"><svg viewBox="0 0 24 24"><path d="M4 19h16M5 15l4-4 3 3 7-7"/></svg>Fortschritt</button>
+  <button data-tab="know"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7M8 11h5"/></svg>Wissen</button>
 </nav>
+<div id="rest" class="rest" hidden role="timer" aria-live="polite"><div class="grow"><span id="rest-label" class="rest-l"></span><span id="rest-time" class="rest-t">0:00</span></div><button id="rest-add" class="rest-b" aria-label="30 Sekunden mehr Pause">+30 s</button><button id="rest-stop" class="rest-b" aria-label="Pause beenden">Weiter</button></div>
 <div id="toast" class="toast" hidden></div>
 <input type="file" id="photo-in" accept="image/*" hidden>
 <input type="file" id="import-in" accept="application/json,.json" hidden>
@@ -167,7 +193,7 @@ details summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent
 // ---------- Plan ----------
 // Bereiche laut Studioseite MC Shape Köngen: Freie Gewichte, Life Fitness Kraft-Zirkel / Gerätetraining, X-Cross, Dr. Wolff, Functional Area
 const AREA={fh:"Freie Gewichte",lf:"Life Fitness Geräte",cab:"Kabelzug / X-Cross",wolff:"Dr. Wolff",fn:"Functional Area"};
-const PAT={knee:"Beine (Kniebeuge-Muster)",hinge:"Rückseite & Po",hpush:"Brust drücken",vpull:"Rücken – von oben ziehen",hpull:"Rücken – rudern",vpush:"Schultern drücken",uni:"Beine einzeln / Oberschenkel",shoulder:"Seitliche Schulter",core:"Rumpf"};
+const PAT={knee:"Beine (Kniebeuge-Muster)",hinge:"Rückseite & Po",hpush:"Brust drücken",vpull:"Rücken – von oben ziehen",hpull:"Rücken – rudern",vpush:"Schultern drücken",uni:"Beine einzeln / Oberschenkel",shoulder:"Seitliche Schulter",core:"Rumpf",tri:"Trizeps (Armstrecker)",bi:"Bizeps (Armbeuger)"};
 const LIB={
   squat:{n:"Kniebeuge (Langhantel)",area:"fh",pat:"knee",inc:2.5,start:20,bar:true},
   goblet:{n:"Goblet Squat (Kurzhantel)",area:"fn",pat:"knee",inc:2,start:12},
@@ -196,12 +222,22 @@ const LIB={
   crunch:{n:"Kabel-Crunch",area:"cab",pat:"core",inc:2.5,start:20},
   abmachine:{n:"Bauchmaschine",area:"lf",pat:"core",inc:2.5,start:20},
   wolffrot:{n:"Rumpfrotation (Wdh je Seite)",area:"wolff",pat:"core",inc:2.5,start:15},
-  pallof:{n:"Pallof Press am Kabel (Wdh je Seite)",area:"cab",pat:"core",inc:1.25,start:7.5}
+  pallof:{n:"Pallof Press am Kabel (Wdh je Seite)",area:"cab",pat:"core",inc:1.25,start:7.5},
+  triceps:{n:"Trizepsdrücken am Kabel (Seil)",area:"cab",pat:"tri",inc:2.5,start:15},
+  ohtriceps:{n:"Überkopf-Trizepsstrecken am Kabel",area:"cab",pat:"tri",inc:2.5,start:10},
+  tricepsmachine:{n:"Trizepsmaschine / Dip-Maschine",area:"lf",pat:"tri",inc:2.5,start:20},
+  dbcurl:{n:"Bizepscurls (Kurzhanteln, kg je Hantel)",area:"fh",pat:"bi",inc:1,start:8},
+  cablecurl:{n:"Bizepscurls am Kabel",area:"cab",pat:"bi",inc:2.5,start:15},
+  bicepsmachine:{n:"Bizepsmaschine",area:"lf",pat:"bi",inc:2.5,start:15}
 };
+["lateral","cablelateral","legext","legcurl","crunch","abmachine","pallof","wolffrot","triceps","ohtriceps","tricepsmachine","dbcurl","cablecurl","bicepsmachine"].forEach(k=>LIB[k].iso=true);
+// Pausen nach Studienlage: Grundübungen länger, Isolation kürzer
+function restFor(ex){return ex.time?60:ex.iso?90:ex.bar?180:150}
+const restLabel=sec=>sec>=120?(sec/60).toLocaleString("de-DE")+" min":sec+" s";
 const sl=(def,sets,lo,hi)=>({def,sets,lo,hi});
 const PLAN={
-  A:{name:"Ganzkörper A",short:"Tag A",slots:[sl("squat",3,8,10),sl("bench",3,8,10),sl("latpull",3,10,12),sl("rdl",3,8,10),sl("ohp",2,10,12),sl("plank",3,12,15)]},
-  B:{name:"Ganzkörper B",short:"Tag B",slots:[sl("legpress",3,10,12),sl("row",3,10,12),sl("incline",3,8,10),sl("lunge",2,10,12),sl("lateral",2,12,15),sl("crunch",3,12,15)]},
+  A:{name:"Ganzkörper A",short:"Tag A",slots:[sl("squat",3,8,10),sl("bench",3,8,10),sl("latpull",3,10,12),sl("rdl",3,8,10),sl("ohp",2,10,12),sl("plank",2,12,15),sl("triceps",3,10,15)]},
+  B:{name:"Ganzkörper B",short:"Tag B",slots:[sl("legpress",3,10,12),sl("row",3,10,12),sl("incline",3,8,10),sl("lunge",2,10,12),sl("lateral",3,12,15),sl("crunch",2,12,15),sl("dbcurl",3,10,12),sl("legcurl",2,10,12)]},
   C:{name:"Geräte-Zirkel",short:"Zirkel",slots:[sl("legpress",2,12,15),sl("chestpress",2,12,15),sl("latpull",2,12,15),sl("legcurl",2,12,15),sl("rowmachine",2,12,15),sl("shoulderpress",2,12,15),sl("abmachine",2,12,15),sl("backext",2,12,15)]}
 };
 function resolve(p){
@@ -220,7 +256,8 @@ const MX={
   ohp:["fdelt sdelt","triceps traps","dumbbell"],shoulderpress:["fdelt sdelt","triceps traps","seated"],
   lunge:["quads glutes","hams calves","dumbbell"],legext:["quads","","seated"],stepup:["quads glutes","hams calves","dumbbell"],
   lateral:["sdelt","traps","dumbbell"],cablelateral:["sdelt","traps","cable"],
-  plank:["abs","obl fdelt","mat"],crunch:["abs","obl","cable"],abmachine:["abs","obl","seated"],wolffrot:["obl","abs lowback","seated"],pallof:["obl abs","glutes","cable"]
+  plank:["abs","obl fdelt","mat"],crunch:["abs","obl","cable"],abmachine:["abs","obl","seated"],wolffrot:["obl","abs lowback","seated"],pallof:["obl abs","glutes","cable"],
+  triceps:["triceps","","cable"],ohtriceps:["triceps","","cable"],tricepsmachine:["triceps","chest","seated"],dbcurl:["biceps","","dumbbell"],cablecurl:["biceps","","cable"],bicepsmachine:["biceps","","seated"]
 };
 Object.keys(MX).forEach(k=>{LIB[k].mus=MX[k][0].split(" ");LIB[k].mus2=MX[k][1]?MX[k][1].split(" "):[];LIB[k].ill=MX[k][2]});
 const CARDIO={
@@ -290,7 +327,8 @@ function figure(id,obj,canPhoto){
 }
 let ASSETS=null;
 
-const CHECKS=[["steps","8.000+ Schritte"],["water","2,5 l Wasser"],["sleep","7 h Schlaf"],["train","Training oder 30 min Bewegung"]];
+const CHECKS_BASE=[["steps","8.000–10.000 Schritte"],["water","2,5 l Wasser"],["sleep","7–9 h Schlaf"],["train","Training oder 30 min Bewegung"]];
+const checks=()=>settings().creatine?CHECKS_BASE.concat([["creatine","Kreatin 5 g"]]):CHECKS_BASE;
 const STARTERS=[
   {n:"Magerquark 500 g",kcal:335,p:60},{n:"Skyr 450 g",kcal:285,p:50},{n:"Hähnchenbrust 200 g",kcal:220,p:46},
   {n:"3 Eier",kcal:230,p:19},{n:"Proteinshake 30 g",kcal:115,p:24},{n:"Haferflocken 80 g",kcal:295,p:11},
@@ -396,7 +434,7 @@ function render(){
   $("#next").disabled=isToday;
   document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===S.tab?"page":"false"));
   const v=$("#view");
-  v.innerHTML=({today:viewToday,train:viewTrain,food:viewFood,prog:viewProg}[S.tab]||viewToday)();
+  v.innerHTML=({today:viewToday,train:viewTrain,food:viewFood,prog:viewProg,know:viewKnow}[S.tab]||viewToday)();
   if(S.tab==="train")bindTrain();
 }
 function bar(v,g,over){const pct=Math.min(100,g?v/g*100:0);const cls=over?(v>g*1.05?"over":v>=g*.95?"ok":""):(v>=g?"ok":"");return`<div class="bar ${cls}"><i style="width:${pct}%"></i></div>`}
@@ -414,7 +452,7 @@ function viewToday(){
   <section class="card stack">
     <div class="scores">
       <div><span class="unit">Kalorien</span><div class="big">${fmt(t.kcal)}<small> / ${fmt(g.kcal)}</small></div>${bar(t.kcal,g.kcal,true)}<span class="sub">${t.kcal<=g.kcal?"noch "+fmt(g.kcal-t.kcal)+" kcal":fmt(t.kcal-g.kcal)+" kcal drüber"}</span></div>
-      <div><span class="unit">Protein</span><div class="big">${fmt(t.p)}<small> / ${fmt(g.protein)} g</small></div>${bar(t.p,g.protein)}<span class="sub">${protOk?"Ziel erreicht":"noch "+fmt(g.protein-t.p)+" g"}</span></div>
+      <div><span class="unit">Protein</span><div class="big">${fmt(t.p)}<small> / ${fmt(g.protein)} g</small></div>${bar(t.p,g.protein)}<span class="sub">${protOk?"Ziel erreicht":"noch "+fmt(g.protein-t.p)+" g · ideal ~"+fmt(Math.round(g.protein/4/5)*5)+" g pro Mahlzeit"}</span></div>
     </div>
     ${g.example?`<p class="note">Das sind Beispielziele. Unter <b>Fortschritt</b> rechnest du deine eigenen aus.</p>`:""}
     <button class="btn ghost" data-act="tab" data-v="food">Essen eintragen</button>
@@ -429,7 +467,7 @@ function viewToday(){
   <section class="card">
     <h2>Tägliche Basics</h2>
     <div class="checks">
-      ${CHECKS.map(([k,l])=>`<button class="check" data-act="check" data-v="${k}" aria-pressed="${!!ch[k]}"><span class="box">✓</span>${l}</button>`).join("")}
+      ${checks().map(([k,l])=>`<button class="check" data-act="check" data-v="${k}" aria-pressed="${!!ch[k]}"><span class="box">✓</span>${l}</button>`).join("")}
       <div class="check auto" aria-pressed="${protOk}"><span class="box">✓</span>Protein-Ziel<span class="sub">automatisch</span></div>
     </div>
   </section>
@@ -516,6 +554,7 @@ function viewTrain(){
   const d=draftFor(p);
   return`
   ${segHtml(p)}
+  ${phaseNote()}
   <p class="note">${p==="C"?"Geräte-Zirkel an den Life-Fitness-Geräten: jede Station 2 Sätze, kurze Pausen. Ideal, wenn wenig Zeit ist oder die Freihantelfläche voll ist.":"Vorher 5 min locker aufwärmen und pro Grundübung 1–2 leichte Sätze. Schaffst du in allen Sätzen die obere Wiederholungszahl, schlägt die App beim nächsten Mal mehr Gewicht vor."} Gerät besetzt oder nicht da? Tippe auf <b>Tauschen</b>.</p>
   ${resolve(p).map(ex=>{const s=suggest(ex);const sets=d.sets[ex.id]||[];
     const used=new Set(resolve(p).map(x=>x.id));
@@ -528,6 +567,7 @@ function viewTrain(){
       ${S.swapOpen===ex.key?`<div class="swapbox"><span class="sub">Gleiche Muskeln, anderes Gerät:</span><div class="chips">${altsF.map(id=>`<button class="chip" data-act="swap" data-v="${ex.key}|${id}">${esc(LIB[id].n)} <small>${AREA[LIB[id].area]}</small></button>`).join("")}${ex.swapped?`<button class="chip" data-act="swap" data-v="${ex.key}|${def}">Zurück zu: ${esc(LIB[def].n)}</button>`:""}</div></div>`:""}
       ${figure(ex.id,ex,true)}
       <p class="hint">${last}${s.up?`<b>↑ ${s.why}</b>`:s.why}</p>
+      <p class="hint">Pause ${restLabel(restFor(ex))} · ${ex.time?"sauber halten, Bauch fest":learning()?"2–3 Wdh Reserve lassen, Technik lernen":"bis 1–2 Wdh vor dem Muskelversagen"}</p>
       <div class="colhead${ex.time?" single":""}"><span>Satz</span>${ex.time?"":"<span>kg</span>"}<span>${ex.time?"Sekunden":"Wdh"}</span><span></span></div>
       ${sets.map((st,i)=>`<div class="set${ex.time?" single":""}${st.done?" done":""}" data-i="${i}">
         <span class="no">${i+1}</span>
@@ -580,7 +620,49 @@ function saveSession(){
   const id="wo-"+S.sel.slice(0,7);const doc=S.docs[id]||(S.docs[id]={sessions:[]});doc.sessions=doc.sessions||[];
   doc.sessions.push({date:S.sel,plan:p,t:Date.now(),ex});touch(id);
   const day=dayObj(S.sel,true);day.checks=day.checks||{};day.checks.train=true;touch("log-"+S.sel.slice(0,7));
-  delete drafts[p];saveDrafts();S.trainPlan=null;flash("Training gespeichert – stark!");render();window.scrollTo(0,0);
+  delete drafts[p];saveDrafts();S.trainPlan=null;stopRest(true);flash("Training gespeichert – stark!");render();window.scrollTo(0,0);
+}
+
+
+function strengthCount(){return allSessions().filter(x=>!x.cardio).length}
+function learning(){return strengthCount()<6}
+function phaseNote(){
+  const n=strengthCount();
+  if(n<6)return`<p class="note"><b>Phase 1 · Technik (Einheit ${n+1} von 6):</b> Gewichte so wählen, dass 2–3 Wiederholungen Reserve bleiben. Saubere Bewegung über den vollen Bewegungsumfang ist jetzt wichtiger als Gewicht.</p>`;
+  return`<p class="note"><b>Phase 2 · Aufbau:</b> Jeder Satz bis 1–2 Wiederholungen vor dem Muskelversagen. Schaffst du in allen Sätzen die obere Wiederholungszahl, erhöht die App das Gewicht.</p>`;
+}
+// ----- Satzpause -----
+const T={end:0,iv:null,ac:null,wl:null,label:""};
+function beep(){try{const ac=T.ac;if(!ac)return;[0,0.25].forEach(d=>{const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=880;g.gain.setValueAtTime(0.0001,ac.currentTime+d);g.gain.exponentialRampToValueAtTime(0.3,ac.currentTime+d+0.02);g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d+0.18);o.connect(g).connect(ac.destination);o.start(ac.currentTime+d);o.stop(ac.currentTime+d+0.2)})}catch(e){}}
+async function keepAwake(){try{if("wakeLock" in navigator&&!T.wl){T.wl=await navigator.wakeLock.request("screen");T.wl.addEventListener("release",()=>{T.wl=null})}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&T.end)keepAwake()});
+function startRest(sec,label){
+  try{T.ac=T.ac||new (window.AudioContext||window.webkitAudioContext)();if(T.ac.state==="suspended")T.ac.resume()}catch(e){}
+  keepAwake();T.end=Date.now()+sec*1000;T.label=label;$("#rest-label").textContent=label;$("#rest").hidden=false;$("#rest").classList.remove("over");
+  clearInterval(T.iv);T.iv=setInterval(tickRest,250);tickRest();
+}
+function tickRest(){
+  const left=Math.round((T.end-Date.now())/1000);
+  if(left<=0){clearInterval(T.iv);T.iv=null;$("#rest-time").textContent="0:00";$("#rest-label").textContent="Pause vorbei – nächster Satz";$("#rest").classList.add("over");
+    try{navigator.vibrate&&navigator.vibrate([300,150,300])}catch(e){}beep();setTimeout(()=>{if(!T.iv)$("#rest").hidden=true},6000);return}
+  $("#rest-time").textContent=Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+}
+function stopRest(release){clearInterval(T.iv);T.iv=null;T.end=0;$("#rest").hidden=true;if(release&&T.wl){T.wl.release().catch(()=>{});T.wl=null}}
+// ----- Wochenvolumen pro Muskelgruppe -----
+const VGROUPS=[["Brust",["chest"]],["Rücken",["lats","upback"]],["Schultern",["fdelt","sdelt","rdelt"]],["Bizeps",["biceps"]],["Trizeps",["triceps"]],["Beine vorne",["quads"]],["Beine hinten",["hams"]],["Po",["glutes"]],["Bauch",["abs","obl"]]];
+function weekVolume(d){
+  const [mon,sun]=weekRange(d);const vol={};VGROUPS.forEach(g=>vol[g[0]]=0);
+  allSessions().filter(s=>s.ex&&s.date>=mon&&s.date<=sun).forEach(s=>Object.keys(s.ex).forEach(id=>{const e=LIB[id];if(!e||!e.mus)return;const n=s.ex[id].length;
+    VGROUPS.forEach(([g,ms])=>{const f=ms.some(m=>e.mus.includes(m))?1:ms.some(m=>e.mus2.includes(m))?0.5:0;vol[g]+=f*n})}));
+  return vol;
+}
+function volumeCard(){
+  const vol=weekVolume(S.sel),max=20;
+  return`<section class="card stack"><h2>Sätze pro Muskel · diese Woche</h2>
+    <div class="vol">${VGROUPS.map(([g])=>{const v=vol[g];const cls=v>=10?"ok":v>=6?"mid":"";
+      return`<div class="vrow"><span>${g}</span><div class="vbar ${cls}"><i style="width:${Math.min(100,v/max*100)}%"></i><b style="left:50%"></b></div><span class="num">${fmt(v,v%1?1:0)}</span></div>`}).join("")}</div>
+    <span class="sub">Strich = 10 Sätze. Ab etwa 10 harten Sätzen pro Woche wachsen Muskeln deutlich besser, mehr als 20 bringt kaum noch etwas. Mitarbeitende Muskeln zählen halb.</span>
+  </section>`;
 }
 
 // ----- Food -----
@@ -617,6 +699,38 @@ function viewFood(){
 }
 function addFood(f){const day=dayObj(S.sel,true);day.food=day.food||[];day.food.push({n:f.n,kcal:Math.round(f.kcal||0),p:Math.round((f.p||0)*10)/10});touch("log-"+S.sel.slice(0,7));render();flash(f.n+" eingetragen")}
 
+
+const TEMPOS=[[0.5,"Langsam","0,5 %"],[0.7,"Empfohlen","0,7 %"],[1,"Schnell","1 %"]];
+const tempo=()=>settings().tempo||0.7;
+const kcalFloor=()=>settings().sex==="w"?1200:1500;
+// Echter Verbrauch aus Daten: Ø Kalorien − Gewichtstrend × 7.700 kcal/kg (letzte 21 Tage)
+function adaptive(){
+  const end=today(),start=addDays(end,-20);
+  const intake=[];for(let d=start;d<=end;d=addDays(d,1)){const k=totals(d).kcal;if(k>=800)intake.push(k)}
+  const ws=weights().filter(w=>w[0]>=start&&w[0]<=end);
+  const t0=new Date(start+"T12:00");const x=ws.map(w=>(new Date(w[0]+"T12:00")-t0)/864e5),y=ws.map(w=>w[1]);
+  const span=x.length?x[x.length-1]-x[0]:0;
+  if(intake.length<10||ws.length<8||span<12)return{need:{food:Math.max(0,10-intake.length),w:Math.max(0,8-ws.length)}};
+  const mx=x.reduce((a,b)=>a+b,0)/x.length,my=y.reduce((a,b)=>a+b,0)/y.length;
+  let nu=0,de=0;x.forEach((xi,i)=>{nu+=(xi-mx)*(y[i]-my);de+=(xi-mx)**2});const slope=de?nu/de:0;
+  const avgIn=intake.reduce((a,b)=>a+b,0)/intake.length;const tdee=avgIn-slope*7700;
+  const w=avgTo(weights(),end)||my;
+  const target=Math.max(kcalFloor(),Math.round((tdee-tempo()/100*w*7700/7)/50)*50);
+  return{tdee:Math.round(tdee/10)*10,perWeek:slope*7,avgIn:Math.round(avgIn),target};
+}
+function adaptiveCard(){
+  const a=adaptive(),s=settings();
+  let body;
+  if(a.need){body=`<p class="sub">Trag an mindestens 10 Tagen dein Essen komplett ein und wieg dich 8-mal über zwei Wochen. Dann berechnet die App aus deinen echten Daten, wie viel du wirklich verbrauchst – genauer als jede Formel.</p>
+    <p class="sub">Es fehlen noch: ${a.need.food?a.need.food+" Tage Essen":""}${a.need.food&&a.need.w?" und ":""}${a.need.w?a.need.w+"× Wiegen":""}${!a.need.food&&!a.need.w?"ein paar Tage Abstand zwischen erstem und letztem Wiegen":""}.</p>`}
+  else{const diff=s.kcal?a.target-s.kcal:null;
+    body=`<div class="tiles"><div class="tile"><div class="v">${fmt(a.tdee)}</div><div class="l">Verbrauch kcal</div></div><div class="tile"><div class="v">${fmt(a.avgIn)}</div><div class="l">Ø gegessen</div></div><div class="tile"><div class="v ${a.perWeek<0?"good":""}">${(a.perWeek>0?"+":"")+fmt(a.perWeek,2)}</div><div class="l">kg / Woche</div></div></div>
+    <p class="sub">Für dein Tempo (${fmt(tempo(),1)} % pro Woche) passen <b>${fmt(a.target)} kcal</b> am Tag.</p>
+    ${diff!=null&&Math.abs(diff)>=100?`<button class="btn" data-act="apply-adaptive" data-v="${a.target}">Kalorienziel auf ${fmt(a.target)} kcal setzen</button>`:`<p class="sub good">Dein aktuelles Ziel passt.</p>`}`}
+  return`<section class="card stack"><h2>Wochen-Check · echter Verbrauch</h2>${body}</section>`;
+}
+function proteinFor(w){const tw=settings().targetW;return Math.round(((tw&&w-tw>15)?2.2*tw:2.0*w)/5)*5}
+
 // ----- Progress -----
 function chart(ws){
   const end=today(),start=addDays(end,-89);const pts=ws.filter(w=>w[0]>=start);
@@ -648,8 +762,9 @@ function viewProg(){
   const startW=s.startW||(ws[0]&&ws[0][1]);const tot=a7!=null&&startW?a7-startW:null;
   let tip="";
   if(wc!=null&&a7){
-    if(wc< -a7*0.01)tip=`<p class="note">Du nimmst gerade über 1 % pro Woche ab. Für den Muskelaufbau sind 0,5–1 % besser – iss an Trainingstagen etwas mehr.</p>`;
-    else if(wc> -0.1&&ws.length>=14)tip=`<p class="note">Der Schnitt bewegt sich kaum. Wenn das zwei Wochen so bleibt: 150–200 kcal weniger am Tag oder 2.000 Schritte mehr.</p>`;
+    const rate=-wc/a7*100;
+    if(rate>tempo()+0.4)tip=`<p class="note">Du nimmst gerade ${fmt(rate,1)} % pro Woche ab – schneller als geplant (${fmt(tempo(),1)} %). Zu schnell kostet Muskeln: iss etwa 150–200 kcal mehr.</p>`;
+    else if(rate<0.2&&ws.length>=14)tip=`<p class="note">Der Schnitt bewegt sich kaum. Wenn das zwei Wochen so bleibt: 150–200 kcal weniger oder 2.000 Schritte mehr pro Tag. Ausnahme: In den ersten 2 Wochen mit Kreatin ist +1–2 kg Wasser normal.</p>`;
   }
   const waists=[];Object.keys(S.docs).filter(k=>k.startsWith("log-")).forEach(k=>{const d=S.docs[k].days||{};Object.keys(d).forEach(x=>{if(d[x].waist!=null)waists.push([x,d[x].waist])})});waists.sort((a,b)=>a[0]<b[0]?-1:1);
   const strength=Object.keys(LIB).map(id=>{const e=LIB[id];const ss=allSessions().filter(s=>s.ex&&s.ex[id]);if(!ss.length)return null;
@@ -667,11 +782,16 @@ function viewProg(){
     <button class="btn" data-act="waist" style="align-self:flex-end">Speichern</button></div>
     <span class="sub">${waists.length?`Zuletzt ${fmt(waists[waists.length-1][1],1)} cm${waists.length>1?` · seit ${dlabel(waists[0][0],{day:"numeric",month:"short"})}: ${fmt(waists[waists.length-1][1]-waists[0][1],1)} cm`:""}`:"Einmal pro Woche messen. Sinkt der Bauch, während das Gewicht gleich bleibt, baust du Fett ab und Muskeln auf."}</span>
   </section>
+  ${volumeCard()}
   <section class="card"><h2>Kraft</h2>
     ${strength.length?`<div class="list">${strength.map(x=>`<div class="item"><div class="grow">${esc(x.e.n.replace(/ \(.*\)/,""))}<div class="sub">${x.n} Einheiten</div></div><span class="num">${x.e.time?x.first+" → "+x.last+" s":fkg(x.first)+" → <b>"+fkg(x.last)+" kg</b>"}</span></div>`).join("")}</div>`
       :`<p class="sub">Nach deinen ersten Einheiten siehst du hier, wie sich dein Arbeitsgewicht pro Übung entwickelt.</p>`}
   </section>
+  ${adaptiveCard()}
   <section class="card stack"><h2>Ziele</h2>
+    <div><span class="sub">Abnehm-Tempo pro Woche (vom Körpergewicht)</span>
+    <div class="seg" role="group" aria-label="Abnehm-Tempo" style="margin-top:6px">${TEMPOS.map(([v,l,p])=>`<button data-act="tempo" data-v="${v}" aria-pressed="${v===tempo()}">${l}<br><small>${p}</small></button>`).join("")}</div>
+    <span class="sub">0,7 % ist der beste Kompromiss: zügig Fett weg, Muskeln bleiben und wachsen als Einsteiger trotzdem.</span></div>
     <div class="grid2">
       <label class="f" for="s-kcal">Kalorien pro Tag<input id="s-kcal" inputmode="numeric" value="${s.kcal||""}" placeholder="2200"></label>
       <label class="f" for="s-p">Protein pro Tag (g)<input id="s-p" inputmode="numeric" value="${s.protein||""}" placeholder="160"></label>
@@ -692,13 +812,90 @@ function viewProg(){
           <option value="1.55"${est.act==="1.55"?" selected":""}>Teils auf den Beinen, 3× Training</option>
           <option value="1.725"${est.act==="1.725"?" selected":""}>Körperlich aktiv, 3× Training</option></select></label>
         <button class="btn ghost" data-act="estimate">Ausrechnen</button>
-        ${S.estRes?`<p class="note">Erhaltungsbedarf ca. <b>${fmt(S.estRes.tdee)} kcal</b>. Für Fettabbau bei Muskelaufbau: <b>${fmt(S.estRes.kcal)} kcal</b> (rund 400 kcal darunter) und <b>${fmt(S.estRes.p)} g Protein</b> (1,8 g je kg).</p><button class="btn" data-act="apply-est">Als Ziele übernehmen</button>`:""}
+        ${S.estRes?`<p class="note">Erhaltungsbedarf ca. <b>${fmt(S.estRes.tdee)} kcal</b>. Für ${fmt(tempo(),1)} % pro Woche: <b>${fmt(S.estRes.kcal)} kcal</b> (rund ${fmt(S.estRes.def)} kcal darunter, nie unter dem Grundumsatz) und <b>${fmt(S.estRes.p)} g Protein</b> (2 g je kg). Nach 2–3 Wochen rechnet der Wochen-Check mit deinen echten Daten nach.</p><button class="btn" data-act="apply-est">Als Ziele übernehmen</button>`:""}
       </div>
     </details>
   </section>
   <section class="card stack"><h2>Datensicherung</h2>
     <p class="sub">Alle Daten liegen nur auf diesem Handy. Sichere sie ab und zu, z. B. in deine Dateien oder per Mail an dich selbst. Fotos sind in der Sicherung nicht enthalten.</p>
     <div class="row"><button class="btn ghost" data-act="export">Sicherung erstellen</button><button class="btn ghost" data-act="import">Sicherung einspielen</button></div>
+  </section>`;
+}
+
+
+// ----- Wissen -----
+function viewKnow(){
+  const cr=!!settings().creatine;
+  const li=(t,d,src)=>`<li><b>${t}</b> ${d}${src?` <span class="src">${src}</span>`:""}</li>`;
+  return`
+  <section class="card stack know">
+    <h2>Dein Weg: Rekomposition</h2>
+    <p>Als Einsteiger kannst du gleichzeitig Fett abbauen und Muskeln aufbauen. Das klappt, wenn drei Dinge zusammenkommen: schweres Training mit stetiger Steigerung, viel Protein und ein moderates Kaloriendefizit. Die App ist genau darauf eingestellt.</p>
+    <p class="sub">Erwartung: Die Waage sinkt langsamer, als du Fett verlierst, weil gleichzeitig Muskeln dazukommen. Bauchumfang, Kraftwerte und Spiegel zeigen den Fortschritt besser.</p>
+  </section>
+  <section class="card stack know">
+    <h2>Training</h2>
+    <ul>
+      ${li("Ganzkörper, 3× pro Woche.","Jeder Muskel wird so 2× pro Woche trainiert. Das bringt mehr Wachstum als 1× pro Woche.","Schoenfeld et al. 2016")}
+      ${li("Etwa 10–20 harte Sätze pro Muskel und Woche.","Mehr Sätze bringen mehr Muskel, bis etwa 20. Als Einsteiger reichen 10. Die App zeigt unter Fortschritt, wo du stehst.","Schoenfeld et al. 2017")}
+      ${li("Nah ans Muskelversagen.","Stopp 1–2 Wiederholungen vorher. Nur in den ersten 6 Einheiten bewusst 2–3 Wiederholungen Reserve lassen, um die Technik zu lernen.","Robinson et al. 2024")}
+      ${li("Ständig steigern.","Schaffst du in allen Sätzen die obere Wiederholungszahl, kommt mehr Gewicht drauf. Das ist der wichtigste Wachstumsreiz.","")}
+      ${li("Lange Pausen bei Grundübungen.","2–3 Minuten bei Kniebeuge, Bankdrücken und Co., 90 Sekunden bei kleinen Übungen. Der Timer startet automatisch beim Abhaken.","Schoenfeld et al. 2016")}
+      ${li("Voller Bewegungsumfang.","Gerade die gedehnte Position, z. B. tief in der Kniebeuge, regt das Wachstum stark an.","Pedrosa et al. 2022")}
+    </ul>
+  </section>
+  <section class="card stack know">
+    <h2>Ernährung</h2>
+    <ul>
+      ${li("Defizit von 0,5–1 % des Körpergewichts pro Woche.","Langsamer abnehmen schützt die Muskeln. Mit 0,7 % pro Woche bauten Sportler sogar noch Muskeln auf.","Garthe et al. 2011")}
+      ${li("Protein 1,6–2,2 g pro kg.","Im Defizit eher am oberen Ende, die App rechnet mit 2 g/kg. Bei deutlichem Übergewicht vom Zielgewicht aus.","Morton et al. 2018")}
+      ${li("Auf 3–5 Mahlzeiten verteilen.","Je 30–40 g Protein. Vor dem Schlafen Magerquark oder Skyr, das langsame Eiweiß (Kasein) versorgt nachts die Muskeln.","Snijders et al. 2015")}
+      ${li("Echte Daten statt Schätzung.","Formeln liegen oft 10–20 % daneben. Der Wochen-Check rechnet nach 2–3 Wochen aus deinem Essen und Gewichtstrend, was du wirklich verbrauchst.","")}
+      ${li("Sattmacher wählen.","Viel Gemüse, Kartoffeln, Haferflocken, mageres Eiweiß. Flüssige Kalorien wie Saft, Limo und Alkohol möglichst weglassen.","")}
+    </ul>
+  </section>
+  <section class="card stack know">
+    <h2>Erholung & Alltag</h2>
+    <ul>
+      ${li("7–9 Stunden Schlaf.","Mit zu wenig Schlaf verloren Teilnehmer im Defizit mehr Muskeln und weniger Fett – bei gleichen Kalorien.","Nedeltcheva et al. 2010")}
+      ${li("8.000–10.000 Schritte am Tag.","Alltagsbewegung verbrennt oft mehr als die Ausdauereinheiten und stört den Muskelaufbau nicht.","")}
+      ${li("Ausdauer locker halten.","Ruhige Einheiten auf Rad, Laufband oder Crosstrainer stören den Muskelaufbau kaum. Harte Intervalle nicht direkt vor Beintraining.","Wilson et al. 2012")}
+    </ul>
+  </section>
+  <section class="card stack know">
+    <h2>Legale Hilfsmittel · gut belegt</h2>
+    <div class="supp"><h3>Kreatin-Monohydrat</h3>
+      <p>3–5 g jeden Tag, Uhrzeit egal, eine Ladephase ist unnötig. Es ist das am besten untersuchte Supplement für mehr Kraft und Muskelmasse und kostet etwa 1 € pro Woche. Am Anfang lagerst du 1–2 kg Wasser in den Muskeln ein. Das ist kein Fett, also nicht erschrecken. Bei Nierenerkrankungen vorher den Arzt fragen. <span class="src">ISSN-Position, Kreider et al. 2017</span></p>
+      <button class="btn ${cr?"ghost":""} small" data-act="creatine">${cr?"Aus der Checkliste entfernen":"In die tägliche Checkliste aufnehmen"}</button></div>
+    <div class="supp"><h3>Koffein</h3>
+      <p>Etwa 200 mg (2 Tassen Kaffee) 30–60 Minuten vor dem Training steigern Kraft und Ausdauer. Höchstens 400 mg am Tag und nach etwa 14 Uhr keins mehr, sonst leidet der Schlaf. Bei Bluthochdruck oder Herzproblemen vorher den Arzt fragen. <span class="src">EFSA 2015 · ISSN 2021</span></p></div>
+    <div class="supp"><h3>Proteinpulver</h3>
+      <p>Whey oder Mehrkomponenten-Protein ist kein Wundermittel, aber praktisch, wenn du dein Proteinziel mit Essen nicht schaffst. Ein Shake mit 30 g Pulver liefert etwa 24 g Protein.</p></div>
+  </section>
+  <section class="card stack know">
+    <h2>Nur bei Bedarf</h2>
+    <ul>
+      ${li("Vitamin D:","Im Winter haben viele in Deutschland zu wenig. Am besten erst beim Hausarzt messen lassen und dann gezielt ergänzen.","")}
+      ${li("Omega-3:","Sinnvoll, wenn du selten fetten Fisch isst. Für den Muskelaufbau sind die Belege schwach.","")}
+    </ul>
+  </section>
+  <section class="card stack know">
+    <h2>Spar dir das Geld</h2>
+    <p>BCAA oder EAA, Testo-Booster, Fatburner, L-Carnitin, Glutamin und teure Pre-Workout-Mischungen bringen kaum etwas. In den Mischungen wirkt meist nur das Koffein. Wenn du genug Protein isst, haben Aminosäure-Pulver keinen Zusatznutzen.</p>
+  </section>
+  <section class="card stack know warnbox">
+    <h2>Finger weg</h2>
+    <p>SARMs, Prohormone, Clenbuterol, DNP und sogenannte „Research Chemicals“ sind nicht zugelassen und teils illegal. Sie greifen ins Hormonsystem ein und können Leber und Herz schädigen. DNP kann sogar tödlich sein. Auch legale Supplemente sind manchmal verunreinigt. Produkte mit dem Siegel der <b>Kölner Liste</b> sind darauf getestet.</p>
+  </section>
+  <section class="card stack know">
+    <h2>Ausrüstung, die wirklich hilft</h2>
+    <ul>
+      ${li("Küchenwaage (ca. 10 €):","Der größte Hebel für genaues Kalorienzählen. Schätzen liegt oft 20–30 % daneben.","")}
+      ${li("Körperwaage und Maßband:","Morgens nüchtern wiegen, die App bildet den Durchschnitt. Den Bauchumfang 1× pro Woche messen.","")}
+      ${li("Schrittzähler:","Das Handy oder eine Uhr reicht.","")}
+      ${li("Zughilfen (Straps):","Erst später, wenn beim Kreuzheben oder Rudern der Griff vor dem Rücken aufgibt. Gürtel und Handschuhe brauchst du als Einsteiger nicht.","")}
+    </ul>
+    <p class="sub">Bei Vorerkrankungen oder wenn du Medikamente nimmst, besprich Supplemente und Defizit kurz mit deinem Hausarzt.</p>
   </section>`;
 }
 
@@ -727,9 +924,13 @@ $("#view").addEventListener("click",e=>{
     touch("settings");S.swapOpen=null;render();flash(LIB[id].n.replace(/ \(.*\)/,"")+" eingeplant")}
   else if(a==="tick"){const art=b.closest(".ex"),row=b.closest(".set"),ex=resolve(S.trainPlan).find(x=>x.id===art.dataset.ex);const st=drafts[S.trainPlan].sets[ex.id][+row.dataset.i];
     st.done=!st.done;if(st.done&&!st.reps){const s=suggest(ex);st.reps=String(ex.time?(s.target||ex.lo):ex.lo);row.querySelector('[data-f="reps"]').value=st.reps}
-    saveDrafts();row.classList.toggle("done",st.done);b.setAttribute("aria-pressed",st.done)}
+    saveDrafts();row.classList.toggle("done",st.done);b.setAttribute("aria-pressed",st.done);
+    if(st.done)startRest(restFor(ex),ex.n.replace(/ \(.*\)/,"")+" · Satz "+(+row.dataset.i+1)+" geschafft");}
   else if(a==="save-session")saveSession();
   else if(a==="save-cardio")saveCardio();
+  else if(a==="tempo"){const st=S.docs.settings||(S.docs.settings={});st.tempo=+v;S.estRes=null;touch("settings");render();flash("Tempo: "+fmt(+v,1)+" % pro Woche")}
+  else if(a==="apply-adaptive"){const st=S.docs.settings||(S.docs.settings={});st.kcal=+v;touch("settings");render();flash("Kalorienziel: "+fmt(+v)+" kcal")}
+  else if(a==="creatine"){const st=S.docs.settings||(S.docs.settings={});st.creatine=!st.creatine;touch("settings");render();flash(st.creatine?"Kreatin steht jetzt in deiner Checkliste":"Kreatin aus der Checkliste entfernt")}
   else if(a==="export")exportBackup();
   else if(a==="import"){const fi=$("#import-in");fi.value="";fi.click()}
   else if(a==="cdev"){S.cdev=v;render()}
@@ -746,11 +947,13 @@ $("#view").addEventListener("click",e=>{
   else if(a==="estimate"){const sex=$("#e-sex").value,age=num($("#e-age").value),h=num($("#e-h").value),w=num($("#e-w").value),act=$("#e-act").value;
     S.est={sex,age:$("#e-age").value,h:$("#e-h").value,w:$("#e-w").value,act};
     if(!age||!h||!w){flash("Alter, Größe und Gewicht eintragen");render();return}
-    const bmr=10*w+6.25*h-5*age+(sex==="m"?5:-161),tdee=bmr*num(act);
-    S.estRes={tdee:Math.round(tdee/10)*10,kcal:Math.max(sex==="m"?1600:1300,Math.round((tdee-400)/50)*50),p:Math.round(w*1.8/5)*5};render()}
-  else if(a==="apply-est"){const st=S.docs.settings||(S.docs.settings={});st.kcal=S.estRes.kcal;st.protein=S.estRes.p;touch("settings");S.estRes=null;render();flash("Ziele übernommen")}
+    const bmr=10*w+6.25*h-5*age+(sex==="m"?5:-161),tdee=bmr*num(act),def=tempo()/100*w*7700/7;
+    S.estRes={sex,tdee:Math.round(tdee/10)*10,def:Math.round(def/10)*10,kcal:Math.max(sex==="m"?1500:1200,Math.round(bmr/50)*50,Math.round((tdee-def)/50)*50),p:proteinFor(w)};render()}
+  else if(a==="apply-est"){const st=S.docs.settings||(S.docs.settings={});st.kcal=S.estRes.kcal;st.protein=S.estRes.p;st.sex=S.estRes.sex;touch("settings");S.estRes=null;render();flash("Ziele übernommen")}
 });
 
+$("#rest-add").onclick=()=>{T.end=Math.max(T.end,Date.now())+30000;if(!T.iv){T.iv=setInterval(tickRest,250);$("#rest").classList.remove("over");$("#rest-label").textContent=T.label}tickRest()};
+$("#rest-stop").onclick=()=>stopRest(false);
 $("#import-in").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];if(f)importBackup(f)});
 $("#photo-in").addEventListener("change",e=>onPhoto(e.target.files&&e.target.files[0]));
 render();
