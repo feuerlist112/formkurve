@@ -152,6 +152,15 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:60
 .vbtn{text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .linkbtn{border:0;background:none;padding:4px 0;color:var(--accent);font:600 13px var(--body);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .videdit{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:10px;padding:10px}
+.exanim{position:relative;width:100%;aspect-ratio:4/3;max-width:100%}
+.figimg .exim{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;object-fit:contain;border-radius:0}
+.exim.s1{animation:ex1 3s infinite}
+.exim.s2{animation:ex2 3s infinite}
+@keyframes ex1{0%,42%{opacity:1}50%,92%{opacity:0}100%{opacity:1}}
+@keyframes ex2{0%,42%{opacity:0}50%,92%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.exanim{display:grid;grid-template-columns:1fr 1fr;gap:4px;aspect-ratio:auto}.figimg .exim{position:static;height:auto;animation:none;opacity:1}}
+@media (prefers-color-scheme:dark){.exim{filter:invert(.9)}}
+.cap a{color:inherit}
 .list{display:flex;flex-direction:column}
 .item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .item:first-child{border-top:0}
@@ -340,13 +349,15 @@ const ILL={
   stepper:'<line x1="8" y1="84" x2="112" y2="84"/><rect x="20" y="74" width="80" height="8" rx="2" class="fa"/><rect x="34" y="58" width="22" height="6" rx="2" transform="rotate(-12 45 61)" class="fa"/><rect x="62" y="62" width="22" height="6" rx="2" transform="rotate(8 73 65)" class="fa"/><line x1="96" y1="74" x2="96" y2="20" stroke-width="3"/><path d="M96 26 L70 26 L66 34 M96 26 L104 34" fill="none" stroke-width="3"/><rect x="88" y="12" width="18" height="10" rx="2" class="fa"/>'
 };
 function illu(k){return`<svg class="illu" viewBox="0 0 120 90" role="img" aria-label="Symbolbild Gerät" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ILL[k]||""}</svg>`}
+// Zeichnungen: Everkinetic (CC BY-SA 4.0), Start- und Endposition – siehe img/ex/LICENSE.md
+const EK={"squat":"barbell-squat","goblet":"squat-to-bench-with-dumbbells","legpress":"leg-press","bench":"bench-press","chestpress":"machine-bench-press","incline":"dumbbell-incline-bench-press","latpull":"v-bar-pull-down","straightpull":"straight-arm-push-down","row":"seated-cable-rows","rowmachine":"seated-cable-rows","dbrow":"rear-deltoid-row-dumbbell","rdl":"romanian-dead-lift","legcurl":"seated-leg-curl","lunge":"dumbbell-lunges","legext":"leg-extensions","stepup":"step-ups-with-dumbbells","lateral":"lateral-dumbbell-raises","crunch":"seated-ab-crunch-with-cable","triceps":"triceps-pushdown-with-rope-and-cable","ohtriceps":"kneeling-triceps-extension-with-cable","tricepsmachine":"triceps-extensions-using-machine","dbcurl":"biceps-curl-with-dumbbell","cablecurl":"standing-biceps-curl-with-cable","bicepsmachine":"biceps-curl-with-machine","dbreardelt":"bent-over-rear-deltoid-raise-with-head-on-bench","cablefly":"cable-crossover","dbfly":"dumbbell-flys"};
 function photoUrl(id){const ph=(settings().photos||{})[id];return ph&&PHOTO_URLS[ph]?PHOTO_URLS[ph]:null}
 function figure(id,obj,canPhoto){
   const ph=photoUrl(id);
   return`<div class="fig">
-    <div class="figimg">${ph?`<img src="${ph}" alt="Dein Foto: ${esc(obj.n)}" loading="lazy">`:illu(obj.ill)}
+    <div class="figimg">${ph?`<img src="${ph}" alt="Dein Foto: ${esc(obj.n)}" loading="lazy">`:EK[id]?`<div class="exanim" role="img" aria-label="Bewegungsablauf: ${esc(obj.n)}"><img class="exim s1" src="img/ex/${EK[id]}-1.png" alt="" loading="lazy"><img class="exim s2" src="img/ex/${EK[id]}-2.png" alt="" loading="lazy"></div>`:illu(obj.ill)}
       ${canPhoto&&ASSETS?`<button class="btn ghost small photo" data-act="photo" data-v="${id}">${ph?"Foto ändern":"Foto vom Gerät"}</button>`:""}
-      ${ph?"":`<span class="cap">Symbolbild</span>`}</div>
+      ${ph?"":EK[id]?`<span class="cap">Start ↔ Ende · <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.de" target="_blank" rel="noopener">Everkinetic, CC BY-SA 4.0</a></span>`:`<span class="cap">Symbolbild</span>`}</div>
     <div class="figmus">${muscleMap(obj.mus,obj.mus2)}<span class="cap"><b>${obj.mus.map(m=>MUSN[m]).join(", ")}</b>${obj.mus2.length?" · mit: "+obj.mus2.map(m=>MUSN[m]).join(", "):""}</span></div>
   </div>`;
 }
