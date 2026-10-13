@@ -21,7 +21,7 @@
   --bg:#EBEEF1; --surface:#FFFFFF; --ink:#14181D; --muted:#5A6370; --line:#D6DBE1;
   --accent:#1F49D6; --accent-ink:#FFFFFF; --accent-soft:#E3E9FC;
   --good:#1D8048; --good-soft:#DDF1E4; --warn:#A86A12; --track:#DCE1E7;
-  --muscle:#C3CBD4; --p25:#C8352B; --p20:#1F49D6; --p15:#D9A21B; --p10:#2E8B57; --p5:#E9ECEF; --p2:#7B8794; --p1:#B8C0C9;
+  --muscle:#C3CBD4; --s1:#1F49D6; --s2:#EB6834; --p25:#C8352B; --p20:#1F49D6; --p15:#D9A21B; --p10:#2E8B57; --p5:#E9ECEF; --p2:#7B8794; --p1:#B8C0C9;
   --display:"Barlow Condensed","Arial Narrow",Impact,sans-serif;
   --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -29,12 +29,12 @@
   --bg:#0E1115; --surface:#171B21; --ink:#E7EAEE; --muted:#97A0AC; --line:#2A3038;
   --accent:#7290FF; --accent-ink:#0A0D14; --accent-soft:#1C2540;
   --good:#4CC38A; --good-soft:#15291F; --warn:#E3B04B; --track:#252B33;
-  --p5:#3A414B; --muscle:#3A424D; color-scheme:dark}}
+  --p5:#3A414B; --muscle:#3A424D; --s1:#6585FA; --s2:#D95926; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0E1115; --surface:#171B21; --ink:#E7EAEE; --muted:#97A0AC; --line:#2A3038;
   --accent:#7290FF; --accent-ink:#0A0D14; --accent-soft:#1C2540;
   --good:#4CC38A; --good-soft:#15291F; --warn:#E3B04B; --track:#252B33;
-  --p5:#3A414B; --muscle:#3A424D; color-scheme:dark}
+  --p5:#3A414B; --muscle:#3A424D; --s1:#6585FA; --s2:#D95926; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;-webkit-tap-highlight-color:transparent}
@@ -198,6 +198,16 @@ svg.ch .endlab{fill:var(--ink);font-weight:700;font-size:11px}
 svg.ch .xh{stroke:var(--ink);stroke-width:1;opacity:.5}
 svg.ch.mini .endlab{font-size:12px}
 svg.ch .band{fill:var(--good);fill-opacity:.12}
+svg.ch.two .ln{stroke:var(--s1)}
+svg.ch.two .dot,svg.ch.two .end{fill:var(--s1)}
+svg.ch .ln2{fill:none;stroke:var(--s2);stroke-width:2;stroke-linejoin:round}
+svg.ch .dia{fill:var(--s2);stroke:var(--surface);stroke-width:2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .lk{display:inline-block;width:16px;height:3px;border-radius:2px}
+.legend .lk.s1{background:var(--s1)}
+.legend .lk.s2{background:var(--s2)}
+.legend .lk.zone{height:10px;background:var(--good);opacity:.25}
 svg.ch .bandlab{fill:var(--good);font-weight:600}
 svg.cols .col{fill:var(--accent)}
 svg.cols .col.cur{opacity:.45}
@@ -786,7 +796,8 @@ function cardioBuckets(p){
     k.v=k.tot/k.wk;const mid=k.a<st?st:k.a;k.goal=(k.a>t||k.b<st)?null:targetAt(mid);k.easy=ss.filter(x=>CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone!=="hard").reduce((q,x)=>q+(x.cardio.min||0),0);
     const hs=ss.filter(x=>x.cardio.hr&&CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone==="easy"),hm=hs.reduce((q,x)=>q+(x.cardio.min||1),0);
     k.hr=hm?Math.round(hs.reduce((q,x)=>q+x.cardio.hr*(x.cardio.min||1),0)/hm):null;k.hrN=hs.length;
-    const hh=ss.filter(x=>x.cardio.hr&&CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone==="hard");k.hrHard=hh.length?Math.round(hh.reduce((q,x)=>q+x.cardio.hr,0)/hh.length):null});
+    const hh=ss.filter(x=>x.cardio.hr&&x.cardio.type!=="test"&&CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone==="hard");k.hrHard=hh.length?Math.round(hh.reduce((q,x)=>q+x.cardio.hr,0)/hh.length):null;
+    const tt=ss.filter(x=>x.cardio.hr&&x.cardio.type==="test");k.test=tt.length?Math.round(tt.reduce((q,x)=>q+x.cardio.hr,0)/tt.length):null;k.testD=tt.length?tt[tt.length-1].date:null});
   return{weekly,b:out};
 }
 function colChart(bk,o){
@@ -804,18 +815,23 @@ function colChart(bk,o){
     <path d="${goal}" class="goal"/>${lg>=0?`<text x="${W-R+4}" y="${y(bk[lg].goal)+3}" class="goallab">Ziel</text>`:""}
     ${li>=0?(()=>{let ly=y(bk[li].v)-6;const g=bk[li].goal;if(g!=null&&y(g)<ly+16&&y(g)>ly-14)ly=Math.min(ly,y(g)-6);return`<text x="${cx(li)}" y="${ly}" text-anchor="middle" class="endlab">${fmt(bk[li].v)}</text>`})():""}
     ${xl.map(i=>`<text x="${cx(i)}" y="${H-6}" text-anchor="middle">${esc(bk[i].lab)}</text>`).join("")}
-    ${bk.map((k,i)=>`<rect x="${L+band*i}" y="${T}" width="${band}" height="${H-T-B}" fill="transparent" tabindex="0" class="colhit" data-tip="${esc(k.long)}${k.cur?" (läuft)":""}|${o.unit}: ${fmt(k.v)} min|Ziel: ${k.goal!=null?k.goal+" min":"–"}|Einheiten: ${k.n}${k.hr?"|Ø Puls locker: "+k.hr+" /min":""}"/>`).join("")}
+    ${bk.map((k,i)=>`<rect x="${L+band*i}" y="${T}" width="${band}" height="${H-T-B}" fill="transparent" tabindex="0" class="colhit" data-tip="${esc(k.long)}${k.cur?" (läuft)":""}|${o.unit}: ${fmt(k.v)} min|Ziel: ${k.goal!=null?k.goal+" min":"–"}|Einheiten: ${k.n}${k.hr?"|Ø Puls locker: "+k.hr+" /min":""}${k.test?"|Fitness-Test: "+k.test+" /min":""}"/>`).join("")}
   </svg>`;
 }
 function hrHistory(b,weekly){
-  const z=zones(),has=b.filter(k=>k.hr!=null);
-  if(!has.length)return`<p class="sub">Trag beim Speichern den <b>Ø Puls</b> von deiner Uhr ein – dann siehst du hier, ob deine lockeren Einheiten in der richtigen Zone liegen und wie dein Puls mit der Zeit sinkt.</p>`;
-  const sl=b.map(k=>({lab:k.lab,y:k.hr,y2:k.hr,tip:[[weekly?"Woche":"Monat",k.long],["Ø Puls locker",k.hr!=null?k.hr+" /min":"–"],["Einheiten mit Puls",String(k.hrN)]]}));
+  const z=zones(),has=b.filter(k=>k.hr!=null),tests=b.filter(k=>k.test!=null);
+  if(!has.length&&!tests.length)return`<p class="sub">Trag beim Speichern den <b>Ø Puls</b> von deiner Uhr ein – dann siehst du hier, ob deine lockeren Einheiten in der richtigen Zone liegen und wie dein Puls mit der Zeit sinkt. Den Fitness-Test siehst du als eigene Linie.</p>`;
+  const sl=b.map(k=>({lab:k.lab,y:k.hr,y2:k.hr,y3:k.test,tip:[[weekly?"Woche":"Monat",k.long],["Ø Puls locker",k.hr!=null?k.hr+" /min":"–"],...(k.test!=null?[["Fitness-Test",k.test+" /min"]]:[])]}));
   const inZone=z?has.filter(k=>k.hr>=z.easy[0]&&k.hr<=z.easy[1]).length:null;
-  const first=has[0].hr,last=has[has.length-1].hr;
-  return`<h3 class="ovh">Ø Puls bei lockeren Einheiten <small>${weekly?"pro Woche":"pro Monat"}</small></h3>
-    ${lineChart(sl,{dots:true,connect:true,dec:0,minSpan:20,band:z?z.easy:null,bandLabel:z?"Zone locker "+z.easy[0]+"–"+z.easy[1]:"",aria:"Durchschnittspuls bei lockeren Ausdauereinheiten",empty:"",xl:b.length<=6?b.map((_,i)=>i):[0,Math.round((b.length-1)/2),b.length-1],h:150})}
-    <span class="cap">${z?`Fläche = deine Zone „locker“. ${inZone} von ${has.length} ${weekly?"Wochen":"Monaten"} lagen darin. `:""}${has.length>1?(last<first?`Dein Puls ist um ${first-last} Schläge gesunken.`:last>first?"Steigt der Puls bei gleicher Belastung, gönn dir mehr Erholung oder Schlaf.":""):""} Ohne Intervalle und Tests, die würden den Schnitt verfälschen.</span>`;
+  const msg=[];
+  if(tests.length>1){const d=tests[tests.length-1].test-tests[0].test;msg.push(d<0?`<b>Fitness-Test: ${-d} Schläge weniger</b> bei gleicher Belastung – dein Herz arbeitet effizienter.`:d>0?`Fitness-Test: ${d} Schläge mehr als beim ersten Test. Achte auf Schlaf und Erholung, und mach den Test immer unter gleichen Bedingungen.`:`Fitness-Test unverändert.`)}
+  else if(tests.length===1)msg.push(`Erster Fitness-Test: ${tests[0].test} /min – das ist dein Ausgangswert.`);
+  if(z&&has.length)msg.push(`${inZone} von ${has.length} ${weekly?"Wochen":"Monaten"} lagen in der Zone „locker“.`);
+  if(has.length>1){const d=has[has.length-1].hr-has[0].hr;if(d<0)msg.push(`Lockerer Puls: ${-d} Schläge gesunken.`)}
+  return`<h3 class="ovh">Puls-Verlauf <small>${weekly?"pro Woche":"pro Monat"}</small></h3>
+    <div class="legend"><span><i class="lk s1"></i>Ø locker</span>${tests.length?`<span><i class="lk s2"></i>Fitness-Test</span>`:""}${z?`<span><i class="lk zone"></i>Zone locker ${z.easy[0]}–${z.easy[1]}</span>`:""}</div>
+    ${lineChart(sl,{dots:true,connect:true,dec:0,minSpan:20,s2:tests.length?"y3":null,band:z?z.easy:null,bandLabel:"",aria:"Puls-Verlauf: lockere Einheiten und Fitness-Test",empty:"",xl:b.length<=6?b.map((_,i)=>i):[0,Math.round((b.length-1)/2),b.length-1],h:160})}
+    <span class="cap">${msg.join(" ")} Der Fitness-Test ist der genaueste Messwert, weil die Belastung immer gleich ist (5 km/h, 5 % Steigung).</span>`;
 }
 function cardioHistoryCard(){
   const p=S.chP||"q",{weekly,b}=cardioBuckets(p);
@@ -834,8 +850,8 @@ function cardioHistoryCard(){
     ${km>0?`<span class="sub">Strecke im Zeitraum: <b>${fmt(km,km<100?1:0)} km</b></span>`:""}
     ${hrHistory(b,weekly)}
     <span class="cap">Balken = deine Minuten · Linie = Wochenziel (150 → 200 → 250 min)${b.some(k=>k.cur)?" · blasser Balken = läuft noch":""}</span>
-    <details class="tbl"><summary>Werte als Tabelle</summary><div class="tblw"><table><thead><tr><th>${weekly?"Woche ab":"Monat"}</th><th>${weekly?"Minuten":"Ø min/Wo"}</th><th>Ziel</th><th>Einheiten</th><th>km</th><th>davon locker</th><th>Ø Puls locker</th><th>Ø Puls zügig</th></tr></thead><tbody>
-      ${b.slice().reverse().filter(k=>k.n>0||!k.cur).map(k=>`<tr><td>${esc(weekly?dlabel(k.a,{day:"numeric",month:"short"}):k.lab+" "+k.a.slice(2,4))}</td><td>${fmt(k.v)}</td><td>${k.goal??"–"}</td><td>${k.n}</td><td>${k.km>0?fmt(k.km,1):"–"}</td><td>${fmt(k.easy)} min</td><td>${k.hr??"–"}</td><td>${k.hrHard??"–"}</td></tr>`).join("")}
+    <details class="tbl"><summary>Werte als Tabelle</summary><div class="tblw"><table><thead><tr><th>${weekly?"Woche ab":"Monat"}</th><th>${weekly?"Minuten":"Ø min/Wo"}</th><th>Ziel</th><th>Einheiten</th><th>km</th><th>davon locker</th><th>Ø Puls locker</th><th>Ø Puls zügig</th><th>Fitness-Test</th></tr></thead><tbody>
+      ${b.slice().reverse().filter(k=>k.n>0||!k.cur).map(k=>`<tr><td>${esc(weekly?dlabel(k.a,{day:"numeric",month:"short"}):k.lab+" "+k.a.slice(2,4))}</td><td>${fmt(k.v)}</td><td>${k.goal??"–"}</td><td>${k.n}</td><td>${k.km>0?fmt(k.km,1):"–"}</td><td>${fmt(k.easy)} min</td><td>${k.hr??"–"}</td><td>${k.hrHard??"–"}</td><td>${k.test??"–"}</td></tr>`).join("")}
     </tbody></table></div></details>`
     :`<p class="sub">Noch keine Ausdauer-Einheiten. Nach dem ersten Eintrag siehst du hier pro Woche, wie viele Minuten du geschafft hast – und ob du im Ziel liegst.</p>`}
   </section>`;
@@ -1023,7 +1039,7 @@ function niceTicks(lo,hi,n){const span=Math.max(hi-lo,1e-6),raw=span/(n||3),p=Ma
 // slots: [{lab,y,y2,tip:[[name,wert]]}] · y = Einzelwerte (Punkte), y2 = Linie
 function lineChart(slots,o){
   const id="ch"+(++chN),mini=!!o.mini,W=mini?120:340,H=o.h||(mini?54:170),L=mini?4:38,R=mini?6:16,T=mini?8:12,B=mini?6:22,n=slots.length;
-  const lk=o.lineKey||"y2",vals=slots.flatMap(x=>[x.y,x[lk]]).filter(v=>v!=null);
+  const lk=o.lineKey||"y2",k2=o.s2,vals=slots.flatMap(x=>[x.y,x[lk],k2?x[k2]:null]).filter(v=>v!=null);
   if(!vals.length)return`<p class="sub">${o.empty}</p>`;
   const extra=[...(o.ref!=null?[o.ref]:[]),...(o.band||[])];
   let lo=Math.min(...vals,...extra),hi=Math.max(...vals,...extra);const ms=o.minSpan||2;
@@ -1033,9 +1049,10 @@ function lineChart(slots,o){
   const x=i=>L+(n<=1?0.5:i/(n-1))*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
   let d="",pen=false;slots.forEach((s2,i)=>{const v=s2[lk];if(v==null){if(!o.connect)pen=false;return}d+=(pen?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1);pen=true});
   let li=-1;for(let i=n-1;i>=0;i--)if(slots[i][lk]!=null){li=i;break}
+  let d2="",l2=-1;if(k2){let pn=false;slots.forEach((s2,i)=>{const v=s2[k2];if(v==null)return;d2+=(pn?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1);pn=true;l2=i})}
   CH[id]={slots,xs:slots.map((_,i)=>x(i)),W,T,B,H,idx:li};
   const dec=o.dec??1,lab=v=>fmt(v,dec);
-  return`<div class="chwrap"><svg class="ch${mini?" mini":""}" id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}" tabindex="0">
+  return`<div class="chwrap"><svg class="ch${mini?" mini":""}${k2?" two":""}" id="${id}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}" tabindex="0">
     ${mini?"":ticks.map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${fmt(v,v%1?1:0)}</text>`).join("")}
     ${o.band?`<rect x="${L}" y="${y(o.band[1])}" width="${W-L-R}" height="${Math.max(0,y(o.band[0])-y(o.band[1]))}" class="band"/><text x="${W-R}" y="${y(o.band[1])+11}" text-anchor="end" class="bandlab">${esc(o.bandLabel||"")}</text>`:""}
     ${o.ref!=null?`<line x1="${L}" x2="${W-R}" y1="${y(o.ref)}" y2="${y(o.ref)}" class="ref"/>`:""}
@@ -1043,6 +1060,7 @@ function lineChart(slots,o){
     ${o.dots?slots.map((s2,i)=>s2.y!=null?`<circle cx="${x(i).toFixed(1)}" cy="${y(s2.y).toFixed(1)}" r="3" class="dot"/>`:"").join(""):""}
     <path d="${d}" class="ln"/>
     ${li>=0?`<circle cx="${x(li)}" cy="${y(slots[li][lk])}" r="${mini?3.5:4.5}" class="end"/>${mini?"":(()=>{const ex=x(li),ey=y(slots[li][lk]),right=ex<W-R-70;let pi=-1;for(let k=li-1;k>=0;k--)if(slots[k][lk]!=null){pi=k;break}const below=!right&&pi>=0&&slots[pi][lk]>slots[li][lk];return`<text x="${right?ex+9:ex-9}" y="${right?ey+4:below?(ey+18<H-B-4?ey+18:ey+4):ey-10}" text-anchor="${right?"start":"end"}" class="endlab">${lab(slots[li][lk])}${o.unit?" "+o.unit:""}</text>`})()}`:""}
+    ${k2&&l2>=0?`<path d="${d2}" class="ln2"/>${slots.map((s2,i)=>s2[k2]!=null?`<rect x="${(x(i)-4.5).toFixed(1)}" y="${(y(s2[k2])-4.5).toFixed(1)}" width="9" height="9" transform="rotate(45 ${x(i).toFixed(1)} ${y(s2[k2]).toFixed(1)})" class="dia"/>`:"").join("")}${(()=>{const ex=x(l2),ey=y(slots[l2][k2]),right=ex<W-R-70;return`<text x="${right?ex+10:ex-10}" y="${ey-9}" text-anchor="${right?"start":"end"}" class="endlab">${lab(slots[l2][k2])}</text>`})()}`:""}
     <line class="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" visibility="hidden"/>
     <rect class="hit" x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
   </svg></div>`;
@@ -1139,9 +1157,9 @@ function showTip(px,py,rows){const t=$("#tip");t.replaceChildren();rows.forEach(
   t.hidden=false;const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(8,Math.min(innerWidth-w-8,px-w/2))+"px";t.style.top=Math.max(8,py-h-14)+"px"}
 function hideTip(){$("#tip").hidden=true;document.querySelectorAll(".ch .xh").forEach(l=>l.setAttribute("visibility","hidden"))}
 function chartAt(svg,i,dir){const c=CH[svg.id];if(!c)return;i=Math.max(0,Math.min(c.slots.length-1,i));
-  const has=k=>c.slots[k]&&(c.slots[k].y!=null||c.slots[k].y2!=null);if(!has(i)){let j=i;while(j>=0&&j<c.slots.length&&!has(j))j+=dir||-1;if(j<0||j>=c.slots.length)return;i=j}c.idx=i;const xh=svg.querySelector(".xh");xh.setAttribute("x1",c.xs[i]);xh.setAttribute("x2",c.xs[i]);xh.setAttribute("visibility","visible");
+  const has=k=>c.slots[k]&&(c.slots[k].y!=null||c.slots[k].y2!=null||c.slots[k].y3!=null);if(!has(i)){let j=i;while(j>=0&&j<c.slots.length&&!has(j))j+=dir||-1;if(j<0||j>=c.slots.length)return;i=j}c.idx=i;const xh=svg.querySelector(".xh");xh.setAttribute("x1",c.xs[i]);xh.setAttribute("x2",c.xs[i]);xh.setAttribute("visibility","visible");
   const r=svg.getBoundingClientRect();showTip(r.left+c.xs[i]/c.W*r.width,r.top+c.T/c.H*r.height,c.slots[i].tip||[])}
-document.addEventListener("pointermove",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg&&e.target.classList.contains("hit")){const c=CH[svg.id];const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)/r.width*c.W;let bi=-1,bd=1e9;c.xs.forEach((x,i)=>{const s2=c.slots[i];if(s2.y==null&&s2.y2==null)return;const dd=Math.abs(x-px);if(dd<bd){bd=dd;bi=i}});if(bi>=0)chartAt(svg,bi);return}
+document.addEventListener("pointermove",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg&&e.target.classList.contains("hit")){const c=CH[svg.id];const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)/r.width*c.W;let bi=-1,bd=1e9;c.xs.forEach((x,i)=>{const s2=c.slots[i];if(s2.y==null&&s2.y2==null&&s2.y3==null)return;const dd=Math.abs(x-px);if(dd<bd){bd=dd;bi=i}});if(bi>=0)chartAt(svg,bi);return}
   const sb=e.target.closest&&e.target.closest("[data-tip]");if(sb){const r=sb.getBoundingClientRect();const [a,...rest]=sb.dataset.tip.split("|");showTip(r.left+r.width/2,r.top,[["",a],...rest.map(x=>{const i=x.indexOf(":");return i>0?[x.slice(0,i),x.slice(i+1).trim()]:["",x]})]);return}
   if(!$("#tip").hidden)hideTip()});
 document.addEventListener("focusin",e=>{const tg=e.target.closest&&e.target.closest("[data-tip]");if(tg){const r=tg.getBoundingClientRect();const [a,...rest]=tg.dataset.tip.split("|");showTip(r.left+r.width/2,r.top,[["",a],...rest.map(x=>{const i=x.indexOf(":");return i>0?[x.slice(0,i),x.slice(i+1).trim()]:["",x]})]);return}
