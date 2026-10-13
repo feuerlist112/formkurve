@@ -197,6 +197,12 @@ svg.ch .end{fill:var(--accent);stroke:var(--surface);stroke-width:2}
 svg.ch .endlab{fill:var(--ink);font-weight:700;font-size:11px}
 svg.ch .xh{stroke:var(--ink);stroke-width:1;opacity:.5}
 svg.ch.mini .endlab{font-size:12px}
+svg.cols .col{fill:var(--accent)}
+svg.cols .col.cur{opacity:.45}
+svg.cols .goal{fill:none;stroke:var(--ink);stroke-width:1.5;opacity:.55}
+svg.cols .goallab{fill:var(--muted);font-weight:600}
+svg.cols .colhit{outline:none;cursor:pointer}
+svg.cols .colhit:hover,svg.cols .colhit:focus-visible{fill:var(--ink);fill-opacity:.06}
 .smult{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .sm{background:var(--bg);border-radius:10px;padding:8px 6px 4px;min-width:0}
 .smh{display:flex;flex-direction:column;gap:0;font-size:11px;font-weight:600;color:var(--muted);padding:0 4px}
@@ -761,10 +767,68 @@ function treadSuggest(type){
   else why=`Puls war ${c.hr} – genau im Ziel. Gleich lassen${CTYPES[type].min>c.min?", dafür 5 min länger":""}.`;
   return{speed,inc,why,lastMin:c.min};
 }
+
+// ---------- Ausdauer-Verlauf ----------
+// Wochenziel einer bestimmten Woche (gleiche Stufen wie cardioTarget: 150 → 200 → 250 min)
+function targetAt(d){const f=firstDate();if(!f)return 150;const w=Math.floor((new Date(d+"T12:00")-new Date(f+"T12:00"))/864e5/7)+1;return w<=4?150:w<=8?200:250}
+function cardioBuckets(p){
+  const cs=allSessions().filter(x=>x.cardio),t=today(),st=startDate()||t;
+  let weekly,a0;
+  if(p==="q"){weekly=true;a0=addDays(weekRange(t)[0],-7*12)}
+  else if(p==="y"){weekly=false;a0=shiftMonth(t.slice(0,7),-11)+"-01"}
+  else{weekly=(new Date(t+"T12:00")-new Date(st+"T12:00"))/864e5<=182;a0=weekly?weekRange(st)[0]:st.slice(0,7)+"-01"}
+  const out=[];
+  if(weekly){let a=weekRange(a0)[0];while(a<=t){const b=addDays(a,6);out.push({a,b,lab:dlabel(a,{day:"numeric",month:"numeric"}),long:"Woche ab "+dlabel(a,{day:"numeric",month:"short"}),wk:1,cur:b>=t});a=addDays(a,7)}}
+  else{let m=a0.slice(0,7);while(m<=t.slice(0,7)){const a=m+"-01",b=monthEnd(m),end=b<t?b:t;out.push({a,b,lab:MONTHS[+m.slice(5)-1],long:new Date(m+"-15T12:00").toLocaleDateString("de-DE",{month:"long",year:"numeric"}),wk:Math.max(1,((new Date(end+"T12:00")-new Date(a+"T12:00"))/864e5+1)/7),cur:b>=t});m=shiftMonth(m,1)}}
+  out.forEach(k=>{const ss=cs.filter(x=>x.date>=k.a&&x.date<=k.b);k.n=ss.length;k.tot=ss.reduce((q,x)=>q+(x.cardio.min||0),0);k.km=ss.reduce((q,x)=>q+(x.cardio.km||(x.cardio.speed?x.cardio.speed*x.cardio.min/60:0)),0);
+    k.v=k.tot/k.wk;const mid=k.a<st?st:k.a;k.goal=(k.a>t||k.b<st)?null:targetAt(mid);k.easy=ss.filter(x=>CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone!=="hard").reduce((q,x)=>q+(x.cardio.min||0),0)});
+  return{weekly,b:out};
+}
+function colChart(bk,o){
+  const W=340,H=176,L=38,R=34,T=14,B=22,n=bk.length,band=(W-L-R)/n,bw=Math.max(4,Math.min(24,band-2));
+  const max=Math.max(...bk.map(k=>k.v),...bk.map(k=>k.goal||0),10),ticks=niceTicks(0,max*1.05,3),hi=ticks[ticks.length-1];
+  const y=v=>T+(hi-v)/hi*(H-T-B),cx=i=>L+band*i+band/2,base=y(0);
+  const bar=(i,v)=>{const h=base-y(v);if(h<=0)return"";const x0=cx(i)-bw/2,r=Math.min(4,h,bw/2);return`M${x0} ${base}V${y(v)+r}Q${x0} ${y(v)} ${x0+r} ${y(v)}H${x0+bw-r}Q${x0+bw} ${y(v)} ${x0+bw} ${y(v)+r}V${base}Z`};
+  let goal="";bk.forEach((k,i)=>{if(k.goal==null)return;goal+=`M${(L+band*i).toFixed(1)} ${y(k.goal).toFixed(1)}H${(L+band*(i+1)).toFixed(1)}`;const nx=bk[i+1];if(nx&&nx.goal!=null&&nx.goal!==k.goal)goal+=`V${y(nx.goal).toFixed(1)}`});
+  let lg=-1;for(let i=n-1;i>=0;i--)if(bk[i].goal!=null){lg=i;break}
+  const xl=n<=6?bk.map((_,i)=>i):[0,Math.round((n-1)/2),n-1];
+  let li=-1;for(let i=n-1;i>=0;i--)if(bk[i].v>0){li=i;break}
+  return`<svg class="ch cols" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">
+    ${ticks.map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${fmt(v)}</text>`).join("")}
+    ${bk.map((k,i)=>`<path d="${bar(i,k.v)}" class="col${k.cur?" cur":""}"/>`).join("")}
+    <path d="${goal}" class="goal"/>${lg>=0?`<text x="${W-R+4}" y="${y(bk[lg].goal)+3}" class="goallab">Ziel</text>`:""}
+    ${li>=0?(()=>{let ly=y(bk[li].v)-6;const g=bk[li].goal;if(g!=null&&y(g)<ly+16&&y(g)>ly-14)ly=Math.min(ly,y(g)-6);return`<text x="${cx(li)}" y="${ly}" text-anchor="middle" class="endlab">${fmt(bk[li].v)}</text>`})():""}
+    ${xl.map(i=>`<text x="${cx(i)}" y="${H-6}" text-anchor="middle">${esc(bk[i].lab)}</text>`).join("")}
+    ${bk.map((k,i)=>`<rect x="${L+band*i}" y="${T}" width="${band}" height="${H-T-B}" fill="transparent" tabindex="0" class="colhit" data-tip="${esc(k.long)}${k.cur?" (läuft)":""}|${o.unit}: ${fmt(k.v)} min|Ziel: ${k.goal!=null?k.goal+" min":"–"}|Einheiten: ${k.n}"/>`).join("")}
+  </svg>`;
+}
+function cardioHistoryCard(){
+  const p=S.chP||"q",{weekly,b}=cardioBuckets(p);
+  const any=b.some(k=>k.n>0);
+  const tot=b.reduce((q,k)=>q+k.tot,0),n=b.reduce((q,k)=>q+k.n,0),km=b.reduce((q,k)=>q+k.km,0),done=b.filter(k=>!k.cur&&k.goal!=null),hit=done.filter(k=>k.v>=k.goal).length;
+  const unit=weekly?"Minuten":"Ø pro Woche";
+  return`<section class="card stack"><h2>Ausdauer-Verlauf</h2>
+    <div class="seg" role="group" aria-label="Zeitraum">${[["q","3 Monate"],["y","12 Monate"],["s","Seit Start"]].map(([k,l])=>`<button data-act="chp" data-v="${k}" aria-pressed="${k===p}">${l}</button>`).join("")}</div>
+    ${any?`<div class="tiles">
+      <div class="tile"><div class="v">${fmt(tot)}</div><div class="l">Minuten</div></div>
+      <div class="tile"><div class="v">${n}</div><div class="l">Einheiten</div></div>
+      <div class="tile"><div class="v">${done.length?hit+"<small> / "+done.length+"</small>":"–"}</div><div class="l">${weekly?"Wochen":"Monate"} im Ziel</div></div>
+    </div>
+    <h3 class="ovh">${weekly?"Minuten pro Woche":"Ø Minuten pro Woche, je Monat"}</h3>
+    ${colChart(b,{unit,aria:"Ausdauer-Minuten "+(weekly?"pro Woche":"pro Monat")})}
+    ${km>0?`<span class="sub">Strecke im Zeitraum: <b>${fmt(km,km<100?1:0)} km</b></span>`:""}
+    <span class="cap">Balken = deine Minuten · Linie = Wochenziel (150 → 200 → 250 min)${b.some(k=>k.cur)?" · blasser Balken = läuft noch":""}</span>
+    <details class="tbl"><summary>Werte als Tabelle</summary><div class="tblw"><table><thead><tr><th>${weekly?"Woche ab":"Monat"}</th><th>${weekly?"Minuten":"Ø min/Wo"}</th><th>Ziel</th><th>Einheiten</th><th>km</th><th>davon locker</th></tr></thead><tbody>
+      ${b.slice().reverse().filter(k=>k.n>0||!k.cur).map(k=>`<tr><td>${esc(weekly?dlabel(k.a,{day:"numeric",month:"short"}):k.lab+" "+k.a.slice(2,4))}</td><td>${fmt(k.v)}</td><td>${k.goal??"–"}</td><td>${k.n}</td><td>${k.km>0?fmt(k.km,1):"–"}</td><td>${fmt(k.easy)} min</td></tr>`).join("")}
+    </tbody></table></div></details>`
+    :`<p class="sub">Noch keine Ausdauer-Einheiten. Nach dem ersten Eintrag siehst du hier pro Woche, wie viele Minuten du geschafft hast – und ob du im Ziel liegst.</p>`}
+  </section>`;
+}
 function testCard(){
   const tests=allSessions().filter(x=>x.cardio&&x.cardio.type==="test"&&x.cardio.hr);
   const due=tests.length?Math.floor((new Date(today()+"T12:00")-new Date(tests[tests.length-1].date+"T12:00"))/864e5)>=28:true;
   return`<section class="card stack"><h2>Fitness-Test</h2>
+    ${tests.length>1?lineChart(tests.map(x=>({lab:dlabel(x.date,{day:"numeric",month:"numeric"}),y:x.cardio.hr,y2:x.cardio.hr,tip:[["Test",dlabel(x.date)],["Ø Puls",x.cardio.hr+" /min"]]})),{dots:true,dec:0,unit:"",minSpan:10,aria:"Puls beim Fitness-Test",empty:"",xl:tests.length<=4?tests.map((_,i)=>i):[0,tests.length-1],h:130}):""}
     ${tests.length?`<div class="list">${tests.slice(-6).map((x,i,arr)=>`<div class="item"><div class="grow">${dlabel(x.date)}<div class="sub">${CARDIO[x.cardio.dev]?CARDIO[x.cardio.dev].n:""}</div></div><span class="num"><b>${x.cardio.hr}</b> Puls${i>0?` <span class="${x.cardio.hr<arr[0].cardio.hr?"good":""}">(${x.cardio.hr-arr[0].cardio.hr>0?"+":""}${x.cardio.hr-arr[0].cardio.hr})</span>`:""}</span></div>`).join("")}</div>
       <span class="sub">Gleiche Belastung, niedrigerer Puls = dein Herz arbeitet effizienter.</span>`:`<p class="sub">Mach den ersten Test bald, als Ausgangswert. Danach alle 4 Wochen.</p>`}
     ${due?`<button class="btn ghost" data-act="ctype-go" data-v="test">${tests.length?"Test ist fällig":"Ersten Test machen"}</button>`:""}
@@ -817,6 +881,7 @@ function viewCardio(){
     <button class="btn" data-act="save-cardio">Ausdauer speichern (${dlabel(S.sel,{day:"numeric",month:"short"})})</button>
     <span class="sub">Den Ø-Puls zeigt dir die Uhr nach dem Training. Mit ihm passt die App Steigung und Tempo fürs nächste Mal an. Die kcal-Anzeige ist meist zu hoch – iss sie nicht extra wieder auf.</span>
   </section>
+  ${cardioHistoryCard()}
   ${testCard()}`;
 }
 function viewTrain(){
@@ -946,6 +1011,7 @@ function lineChart(slots,o){
   if(!vals.length)return`<p class="sub">${o.empty}</p>`;
   let lo=Math.min(...vals,...(o.ref!=null?[o.ref]:[])),hi=Math.max(...vals,...(o.ref!=null?[o.ref]:[]));const ms=o.minSpan||2;
   if(hi-lo<ms){const m=(hi+lo)/2;lo=m-ms/2;hi=m+ms/2}
+  if(!mini){let lv=null;for(let i=n-1;i>=0;i--)if(slots[i][lk]!=null){lv=slots[i][lk];break}if(lv!=null&&lv<=lo+(hi-lo)*0.1)lo-=(hi-lo)*0.35}
   const ticks=niceTicks(lo,hi,mini?2:3);lo=ticks[0];hi=ticks[ticks.length-1];
   const x=i=>L+(n<=1?0.5:i/(n-1))*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
   let d="",pen=false;slots.forEach((s2,i)=>{const v=s2[lk];if(v==null){if(!o.connect)pen=false;return}d+=(pen?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1);pen=true});
@@ -958,7 +1024,7 @@ function lineChart(slots,o){
     ${mini?"":(o.xl||[]).map(i=>`<text x="${x(i)}" y="${H-6}" text-anchor="${i===0?"start":i===n-1?"end":"middle"}">${esc(slots[i].lab)}</text>`).join("")}
     ${o.dots?slots.map((s2,i)=>s2.y!=null?`<circle cx="${x(i).toFixed(1)}" cy="${y(s2.y).toFixed(1)}" r="3" class="dot"/>`:"").join(""):""}
     <path d="${d}" class="ln"/>
-    ${li>=0?`<circle cx="${x(li)}" cy="${y(slots[li][lk])}" r="${mini?3.5:4.5}" class="end"/>${mini?"":(()=>{const ex=x(li),ey=y(slots[li][lk]),right=ex<W-R-70;let pi=-1;for(let k=li-1;k>=0;k--)if(slots[k][lk]!=null){pi=k;break}const below=!right&&pi>=0&&slots[pi][lk]>slots[li][lk];return`<text x="${right?ex+9:ex-9}" y="${right?ey+4:below?ey+18:ey-10}" text-anchor="${right?"start":"end"}" class="endlab">${lab(slots[li][lk])}${o.unit?" "+o.unit:""}</text>`})()}`:""}
+    ${li>=0?`<circle cx="${x(li)}" cy="${y(slots[li][lk])}" r="${mini?3.5:4.5}" class="end"/>${mini?"":(()=>{const ex=x(li),ey=y(slots[li][lk]),right=ex<W-R-70;let pi=-1;for(let k=li-1;k>=0;k--)if(slots[k][lk]!=null){pi=k;break}const below=!right&&pi>=0&&slots[pi][lk]>slots[li][lk];return`<text x="${right?ex+9:ex-9}" y="${right?ey+4:below?(ey+18<H-B-4?ey+18:ey+4):ey-10}" text-anchor="${right?"start":"end"}" class="endlab">${lab(slots[li][lk])}${o.unit?" "+o.unit:""}</text>`})()}`:""}
     <line class="xh" x1="0" x2="0" y1="${T}" y2="${H-B}" visibility="hidden"/>
     <rect class="hit" x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
   </svg></div>`;
@@ -1060,9 +1126,10 @@ function chartAt(svg,i,dir){const c=CH[svg.id];if(!c)return;i=Math.max(0,Math.mi
 document.addEventListener("pointermove",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg&&e.target.classList.contains("hit")){const c=CH[svg.id];const r=svg.getBoundingClientRect();const px=(e.clientX-r.left)/r.width*c.W;let bi=-1,bd=1e9;c.xs.forEach((x,i)=>{const s2=c.slots[i];if(s2.y==null&&s2.y2==null)return;const dd=Math.abs(x-px);if(dd<bd){bd=dd;bi=i}});if(bi>=0)chartAt(svg,bi);return}
   const sb=e.target.closest&&e.target.closest("[data-tip]");if(sb){const r=sb.getBoundingClientRect();const [a,...rest]=sb.dataset.tip.split("|");showTip(r.left+r.width/2,r.top,[["",a],...rest.map(x=>{const i=x.indexOf(":");return i>0?[x.slice(0,i),x.slice(i+1).trim()]:["",x]})]);return}
   if(!$("#tip").hidden)hideTip()});
-document.addEventListener("focusin",e=>{const svg=e.target.closest&&e.target.closest("svg.ch");if(svg){const c=CH[svg.id];if(c)chartAt(svg,c.idx>=0?c.idx:0)}});
+document.addEventListener("focusin",e=>{const tg=e.target.closest&&e.target.closest("[data-tip]");if(tg){const r=tg.getBoundingClientRect();const [a,...rest]=tg.dataset.tip.split("|");showTip(r.left+r.width/2,r.top,[["",a],...rest.map(x=>{const i=x.indexOf(":");return i>0?[x.slice(0,i),x.slice(i+1).trim()]:["",x]})]);return}
+  const svg=e.target.closest&&e.target.closest("svg.ch");if(svg){const c=CH[svg.id];if(c)chartAt(svg,c.idx>=0?c.idx:0)}});
 document.addEventListener("keydown",e=>{const svg=document.activeElement&&document.activeElement.closest&&document.activeElement.closest("svg.ch");if(!svg)return;const c=CH[svg.id];if(e.key==="ArrowLeft"){chartAt(svg,c.idx-1,-1);e.preventDefault()}else if(e.key==="ArrowRight"){chartAt(svg,c.idx+1,1);e.preventDefault()}else if(e.key==="Escape")hideTip()});
-document.addEventListener("focusout",()=>setTimeout(()=>{if(!document.activeElement||!document.activeElement.closest("svg.ch"))hideTip()},0));
+document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!(a.closest("svg.ch")||a.closest("[data-tip]")))hideTip()},0));
 document.addEventListener("scroll",hideTip,{passive:true});
 
 // Zeitraum für Muskelgruppen-Auswertungen
@@ -1278,6 +1345,7 @@ function viewProg(){
     <span class="sub">${waists.length?`Zuletzt ${fmt(waists[waists.length-1][1],1)} cm${waists.length>1?` · seit ${dlabel(waists[0][0],{day:"numeric",month:"short"})}: ${fmt(waists[waists.length-1][1]-waists[0][1],1)} cm`:""}`:"Einmal pro Woche messen. Sinkt der Bauch, während das Gewicht gleich bleibt, baust du Fett ab und Muskeln auf."}</span>
   </section>
   ${overviewCard()}
+  ${cardioHistoryCard()}
   ${volumeCard()}
   <section class="card"><h2>Kraft</h2>
     ${strength.length?`<div class="list">${strength.map(x=>`<div class="item"><div class="grow">${esc(x.e.n.replace(/ \(.*\)/,""))}<div class="sub">${x.n} Einheiten</div></div><span class="num">${x.e.time?x.first+" → "+x.last+" s":fkg(x.first)+" → <b>"+fkg(x.last)+" kg</b>"}</span></div>`).join("")}</div>`
@@ -1435,6 +1503,7 @@ $("#view").addEventListener("click",e=>{
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
   else if(a==="ovmode"){S.ovMode=v;render()}
   else if(a==="volp"){S.volP=v;render()}
+  else if(a==="chp"){S.chP=v;render()}
   else if(a==="ovnav"){const k=+v;if((S.ovMode||"m")==="m"){const m=shiftMonth(S.ovMonth||today().slice(0,7),k);if(m<=today().slice(0,7)){S.ovMonth=m;render()}}else{const y=(S.ovYear||+today().slice(0,4))+k;if(y<=+today().slice(0,4)){S.ovYear=y;render()}}}
   else if(a==="figmode"){FIGMODE=v;lsSet("formkurve-fig",v);render()}
   else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
