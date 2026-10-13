@@ -210,7 +210,7 @@ svg.ch .dia{fill:var(--s2);stroke:var(--surface);stroke-width:2}
 .legend .lk.zone{height:10px;background:var(--good);opacity:.25}
 svg.ch .bandlab{fill:var(--good);font-weight:600}
 svg.cols .col{fill:var(--accent)}
-svg.cols .col.cur{opacity:.45}
+svg.cols .futbg{fill:var(--track);fill-opacity:.45}
 svg.cols .goal{fill:none;stroke:var(--ink);stroke-width:1.5;opacity:.55}
 svg.cols .goallab{fill:var(--muted);font-weight:600}
 svg.cols .colhit{outline:none;cursor:pointer}
@@ -786,14 +786,15 @@ function targetAt(d){const f=firstDate();if(!f)return 150;const w=Math.floor((ne
 function cardioBuckets(p){
   const cs=allSessions().filter(x=>x.cardio),t=today(),st=startDate()||t;
   let weekly,a0;
-  if(p==="q"){weekly=true;a0=addDays(weekRange(t)[0],-7*12)}
-  else if(p==="y"){weekly=false;a0=shiftMonth(t.slice(0,7),-11)+"-01"}
+  const cst=(cs[0]&&cs[0].date)||st;
+  if(p==="q"){weekly=true;a0=addDays(weekRange(t)[0],-7*12);if(a0<weekRange(cst)[0])a0=weekRange(cst)[0]}
+  else if(p==="y"){weekly=false;a0=shiftMonth(t.slice(0,7),-11)+"-01";if(a0<cst.slice(0,7)+"-01")a0=cst.slice(0,7)+"-01"}
   else{weekly=(new Date(t+"T12:00")-new Date(st+"T12:00"))/864e5<=182;a0=weekly?weekRange(st)[0]:st.slice(0,7)+"-01"}
   const out=[];
-  if(weekly){let a=weekRange(a0)[0];while(a<=t){const b=addDays(a,6);out.push({a,b,lab:dlabel(a,{day:"numeric",month:"numeric"}),long:"Woche ab "+dlabel(a,{day:"numeric",month:"short"}),wk:1,cur:b>=t});a=addDays(a,7)}}
-  else{let m=a0.slice(0,7);while(m<=t.slice(0,7)){const a=m+"-01",b=monthEnd(m),end=b<t?b:t;out.push({a,b,lab:MONTHS[+m.slice(5)-1],long:new Date(m+"-15T12:00").toLocaleDateString("de-DE",{month:"long",year:"numeric"}),wk:Math.max(1,((new Date(end+"T12:00")-new Date(a+"T12:00"))/864e5+1)/7),cur:b>=t});m=shiftMonth(m,1)}}
+  if(weekly){let a=weekRange(a0)[0];while(a<=t||out.length<4){const b=addDays(a,6);out.push({a,b,lab:dlabel(a,{day:"numeric",month:"numeric"}),long:"Woche ab "+dlabel(a,{day:"numeric",month:"short"}),wk:1,cur:a<=t&&b>=t,fut:a>t});a=addDays(a,7)}}
+  else{let m=a0.slice(0,7);while(m<=t.slice(0,7)||out.length<3){const a=m+"-01",b=monthEnd(m),end=b<t?b:t;out.push({a,b,lab:MONTHS[+m.slice(5)-1],long:new Date(m+"-15T12:00").toLocaleDateString("de-DE",{month:"long",year:"numeric"}),wk:Math.max(1,((new Date(end+"T12:00")-new Date(a+"T12:00"))/864e5+1)/7),cur:a<=t&&b>=t,fut:a>t});m=shiftMonth(m,1)}}
   out.forEach(k=>{const ss=cs.filter(x=>x.date>=k.a&&x.date<=k.b);k.n=ss.length;k.tot=ss.reduce((q,x)=>q+(x.cardio.min||0),0);k.km=ss.reduce((q,x)=>q+(x.cardio.km||(x.cardio.speed?x.cardio.speed*x.cardio.min/60:0)),0);
-    k.v=k.tot/k.wk;const mid=k.a<st?st:k.a;k.goal=(k.a>t||k.b<st)?null:targetAt(mid);k.easy=ss.filter(x=>CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone!=="hard").reduce((q,x)=>q+(x.cardio.min||0),0);
+    k.v=k.tot/k.wk;const mid=k.a<st?st:k.a;k.goal=k.b<st?null:targetAt(mid);k.easy=ss.filter(x=>CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone!=="hard").reduce((q,x)=>q+(x.cardio.min||0),0);
     const hs=ss.filter(x=>x.cardio.hr&&CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone==="easy"),hm=hs.reduce((q,x)=>q+(x.cardio.min||1),0);
     k.hr=hm?Math.round(hs.reduce((q,x)=>q+x.cardio.hr*(x.cardio.min||1),0)/hm):null;k.hrN=hs.length;
     const hh=ss.filter(x=>x.cardio.hr&&x.cardio.type!=="test"&&CTYPES[x.cardio.type]&&CTYPES[x.cardio.type].zone==="hard");k.hrHard=hh.length?Math.round(hh.reduce((q,x)=>q+x.cardio.hr,0)/hh.length):null;
@@ -811,14 +812,15 @@ function colChart(bk,o){
   let li=-1;for(let i=n-1;i>=0;i--)if(bk[i].v>0){li=i;break}
   return`<svg class="ch cols" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria)}">
     ${ticks.map(v=>`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+3}" text-anchor="end">${fmt(v)}</text>`).join("")}
-    ${bk.map((k,i)=>`<path d="${bar(i,k.v)}" class="col${k.cur?" cur":""}"/>`).join("")}
+    ${bk.map((k,i)=>k.fut?`<rect x="${L+band*i+1}" y="${T}" width="${band-2}" height="${H-T-B}" class="futbg"/>`:`<path d="${bar(i,k.v)}" class="col"/>`).join("")}
     <path d="${goal}" class="goal"/>${lg>=0?`<text x="${W-R+4}" y="${y(bk[lg].goal)+3}" class="goallab">Ziel</text>`:""}
     ${li>=0?(()=>{let ly=y(bk[li].v)-6;const g=bk[li].goal;if(g!=null&&y(g)<ly+16&&y(g)>ly-14)ly=Math.min(ly,y(g)-6);return`<text x="${cx(li)}" y="${ly}" text-anchor="middle" class="endlab">${fmt(bk[li].v)}</text>`})():""}
     ${xl.map(i=>`<text x="${cx(i)}" y="${H-6}" text-anchor="middle">${esc(bk[i].lab)}</text>`).join("")}
-    ${bk.map((k,i)=>`<rect x="${L+band*i}" y="${T}" width="${band}" height="${H-T-B}" fill="transparent" tabindex="0" class="colhit" data-tip="${esc(k.long)}${k.cur?" (läuft)":""}|${o.unit}: ${fmt(k.v)} min|Ziel: ${k.goal!=null?k.goal+" min":"–"}|Einheiten: ${k.n}${k.hr?"|Ø Puls locker: "+k.hr+" /min":""}${k.test?"|Fitness-Test: "+k.test+" /min":""}"/>`).join("")}
+    ${bk.map((k,i)=>`<rect x="${L+band*i}" y="${T}" width="${band}" height="${H-T-B}" fill="transparent" tabindex="0" class="colhit" data-tip="${esc(k.long)}${k.cur?" (läuft)":k.fut?" (kommt noch)":""}|${o.unit}: ${k.fut?"–":fmt(k.v)+" min"}|Ziel: ${k.goal!=null?k.goal+" min":"–"}|Einheiten: ${k.fut?"–":k.n}${k.hr?"|Ø Puls locker: "+k.hr+" /min":""}${k.test?"|Fitness-Test: "+k.test+" /min":""}"/>`).join("")}
   </svg>`;
 }
 function hrHistory(b,weekly){
+  b=b.filter(k=>!k.fut);
   const z=zones(),has=b.filter(k=>k.hr!=null),tests=b.filter(k=>k.test!=null);
   if(!has.length&&!tests.length)return`<p class="sub">Trag beim Speichern den <b>Ø Puls</b> von deiner Uhr ein – dann siehst du hier, ob deine lockeren Einheiten in der richtigen Zone liegen und wie dein Puls mit der Zeit sinkt. Den Fitness-Test siehst du als eigene Linie.</p>`;
   const sl=b.map(k=>({lab:k.lab,y:k.hr,y2:k.hr,y3:k.test,tip:[[weekly?"Woche":"Monat",k.long],["Ø Puls locker",k.hr!=null?k.hr+" /min":"–"],...(k.test!=null?[["Fitness-Test",k.test+" /min"]]:[])]}));
@@ -833,25 +835,27 @@ function hrHistory(b,weekly){
     ${lineChart(sl,{dots:true,connect:true,dec:0,minSpan:20,s2:tests.length?"y3":null,band:z?z.easy:null,bandLabel:"",aria:"Puls-Verlauf: lockere Einheiten und Fitness-Test",empty:"",xl:b.length<=6?b.map((_,i)=>i):[0,Math.round((b.length-1)/2),b.length-1],h:160})}
     <span class="cap">${msg.join(" ")} Der Fitness-Test ist der genaueste Messwert, weil die Belastung immer gleich ist (5 km/h, 5 % Steigung).</span>`;
 }
+function scrollToHist(){const el=document.getElementById("cardio-hist");if(!el)return;const top=el.getBoundingClientRect().top+window.scrollY-($(".top")?$(".top").offsetHeight:0)-8;window.scrollTo({top,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})}
 function cardioHistoryCard(){
   const p=S.chP||"q",{weekly,b}=cardioBuckets(p);
   const any=b.some(k=>k.n>0);
-  const tot=b.reduce((q,k)=>q+k.tot,0),n=b.reduce((q,k)=>q+k.n,0),km=b.reduce((q,k)=>q+k.km,0),done=b.filter(k=>!k.cur&&k.goal!=null),hit=done.filter(k=>k.v>=k.goal).length;
+  const tot=b.reduce((q,k)=>q+k.tot,0),n=b.reduce((q,k)=>q+k.n,0),km=b.reduce((q,k)=>q+k.km,0),done=b.filter(k=>!k.cur&&!k.fut&&k.goal!=null),hit=done.filter(k=>k.v>=k.goal).length;
   const unit=weekly?"Minuten":"Ø pro Woche";
-  return`<section class="card stack"><h2>Ausdauer-Verlauf</h2>
+  return`<section class="card stack" id="cardio-hist"><h2>Ausdauer-Verlauf</h2>
     <div class="seg" role="group" aria-label="Zeitraum">${[["q","3 Monate"],["y","12 Monate"],["s","Seit Start"]].map(([k,l])=>`<button data-act="chp" data-v="${k}" aria-pressed="${k===p}">${l}</button>`).join("")}</div>
     ${any?`<div class="tiles">
       <div class="tile"><div class="v">${fmt(tot)}</div><div class="l">Minuten</div></div>
       <div class="tile"><div class="v">${n}</div><div class="l">Einheiten</div></div>
       <div class="tile"><div class="v">${done.length?hit+"<small> / "+done.length+"</small>":"–"}</div><div class="l">${weekly?"Wochen":"Monate"} im Ziel</div></div>
     </div>
+    ${n<3?`<p class="note">Dein Verlauf startet – mit jeder Einheit kommt ein Stück dazu. Die Linie zeigt dein Wochenziel für die nächsten Wochen.</p>`:""}
     <h3 class="ovh">${weekly?"Minuten pro Woche":"Ø Minuten pro Woche, je Monat"}</h3>
     ${colChart(b,{unit,aria:"Ausdauer-Minuten "+(weekly?"pro Woche":"pro Monat")})}
     ${km>0?`<span class="sub">Strecke im Zeitraum: <b>${fmt(km,km<100?1:0)} km</b></span>`:""}
     ${hrHistory(b,weekly)}
-    <span class="cap">Balken = deine Minuten · Linie = Wochenziel (150 → 200 → 250 min)${b.some(k=>k.cur)?" · blasser Balken = läuft noch":""}</span>
+    <span class="cap">Balken = deine Minuten · Linie = Wochenziel (150 → 200 → 250 min)${b.some(k=>k.fut)?" · graue Flächen = kommende "+(weekly?"Wochen":"Monate"):""}</span>
     <details class="tbl"><summary>Werte als Tabelle</summary><div class="tblw"><table><thead><tr><th>${weekly?"Woche ab":"Monat"}</th><th>${weekly?"Minuten":"Ø min/Wo"}</th><th>Ziel</th><th>Einheiten</th><th>km</th><th>davon locker</th><th>Ø Puls locker</th><th>Ø Puls zügig</th><th>Fitness-Test</th></tr></thead><tbody>
-      ${b.slice().reverse().filter(k=>k.n>0||!k.cur).map(k=>`<tr><td>${esc(weekly?dlabel(k.a,{day:"numeric",month:"short"}):k.lab+" "+k.a.slice(2,4))}</td><td>${fmt(k.v)}</td><td>${k.goal??"–"}</td><td>${k.n}</td><td>${k.km>0?fmt(k.km,1):"–"}</td><td>${fmt(k.easy)} min</td><td>${k.hr??"–"}</td><td>${k.hrHard??"–"}</td><td>${k.test??"–"}</td></tr>`).join("")}
+      ${b.slice().reverse().filter(k=>!k.fut&&(k.n>0||!k.cur)).map(k=>`<tr><td>${esc(weekly?dlabel(k.a,{day:"numeric",month:"short"}):k.lab+" "+k.a.slice(2,4))}</td><td>${fmt(k.v)}</td><td>${k.goal??"–"}</td><td>${k.n}</td><td>${k.km>0?fmt(k.km,1):"–"}</td><td>${fmt(k.easy)} min</td><td>${k.hr??"–"}</td><td>${k.hrHard??"–"}</td><td>${k.test??"–"}</td></tr>`).join("")}
     </tbody></table></div></details>`
     :`<p class="sub">Noch keine Ausdauer-Einheiten. Nach dem ersten Eintrag siehst du hier pro Woche, wie viele Minuten du geschafft hast – und ob du im Ziel liegst.</p>`}
   </section>`;
@@ -883,6 +887,7 @@ function viewCardio(){
   <section class="card stack">
     <div class="row"><div class="grow"><span class="unit">Ausdauer diese Woche · Woche ${wn}</span><div class="big">${fmt(wk)}<small> / ${tgt} min</small></div></div></div>
     ${bar(wk,tgt)}
+    <button class="btn ghost small" data-act="goto-hist" style="align-self:flex-start">Verlauf & Puls ansehen ↓</button>
     <span class="sub">So kommst du hin: 20 min nach jedem Krafttraining plus 30–45 min an 1–2 freien Tagen. Das Ziel steigt von 150 über 200 auf 250 min pro Woche – ab etwa 225–250 min wird Ausdauer für die Gewichtsabnahme richtig wirksam.</span>
   </section>
   <section class="card stack">
@@ -957,7 +962,7 @@ function saveCardio(){
   const id="wo-"+S.sel.slice(0,7);const doc=S.docs[id]||(S.docs[id]={sessions:[]});doc.sessions=doc.sessions||[];
   doc.sessions.push({date:S.sel,plan:"cardio",t:Date.now(),cardio:{dev:S.cdev,type:S.ctype,min,km:$("#c-km")?num($("#c-km").value):null,speed:$("#c-speed")?num($("#c-speed").value):null,inc:$("#c-inc")?num($("#c-inc").value):null,hr:num($("#c-hr").value),kcal:num($("#c-kcal").value)}});touch(id);
   const day=dayObj(S.sel,true);day.checks=day.checks||{};day.checks.train=true;touch("log-"+S.sel.slice(0,7));
-  flash(fmt(min)+" min Ausdauer gespeichert");render();window.scrollTo(0,0);
+  flash(fmt(min)+" min Ausdauer gespeichert");render();scrollToHist();
 }
 let photoTarget=null;
 async function shrink(file){
@@ -1539,7 +1544,8 @@ $("#view").addEventListener("click",e=>{
     dayObj(S.sel,true).weight=w;const st=S.docs.settings||(S.docs.settings={});if(!st.startW){st.startW=w;touch("settings")}touch(mk);render();flash("Gewicht gespeichert")}
   else if(a==="ovmode"){S.ovMode=v;render()}
   else if(a==="volp"){S.volP=v;render()}
-  else if(a==="chp"){S.chP=v;render()}
+  else if(a==="chp"){S.chP=v;const y0=window.scrollY;render();window.scrollTo(0,y0)}
+  else if(a==="goto-hist")scrollToHist();
   else if(a==="ovnav"){const k=+v;if((S.ovMode||"m")==="m"){const m=shiftMonth(S.ovMonth||today().slice(0,7),k);if(m<=today().slice(0,7)){S.ovMonth=m;render()}}else{const y=(S.ovYear||+today().slice(0,4))+k;if(y<=+today().slice(0,4)){S.ovYear=y;render()}}}
   else if(a==="figmode"){FIGMODE=v;lsSet("formkurve-fig",v);render()}
   else if(a==="vid-open"){S.vidOpen=S.vidOpen===v?null:v;render();const i=document.getElementById("vid-"+v);if(i)i.focus()}
